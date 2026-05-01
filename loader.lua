@@ -19,11 +19,11 @@ _G.ForkyHUB.Games = {
         name = "Drag Drive Simulator",
         url = "https://gitlab.com/forky1/forkyHUB/-/raw/main/ddds.lua"
     },
-    [] = {
+    [999999] = {
         name = "BiteByNight",
         url = ""
     },
-    [] = {
+    [999999999] = {
         name = "Fishzar",
         url = ""
     }
