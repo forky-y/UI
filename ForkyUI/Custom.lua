@@ -14,7 +14,7 @@ local ColorModule    = load("src/elements/color.lua")
 local ElementsModule = load("src/elements/Elements.lua")
 local KeybindModule  = load("src/elements/keybind.lua")
 local DialogModule   = load("src/elements/dialog.lua")
-local NotifyFactory = loadstring(game:HttpGet("https://raw.githubusercontent.com/nexiuse/NexHub_UI/main/Fixed_Notify_Untuk_Github.lua"))()
+local NotifyFactory = loadstring(game:HttpGet("https://raw.githubusercontent.com/forky-y/UI/refs/heads/main/ForkyUI/notify.lua"))()
 
 local TabsModule          = loadUrl("https://fitri324.pythonanywhere.com/Tabs.lua/raw")
 local SearchModule        = loadUrl("https://fitri324.pythonanywhere.com/Search.lua/raw")
@@ -396,13 +396,13 @@ function Chloex:Window(GuiConfig)
     
     for _, container in ipairs(cleanupTargets) do
         for _, v in ipairs(container:GetChildren()) do
-            if v.Name == "VelarisUI" or v.Name == "Chloeex" or v.Name == "NexHub" then
+            if v.Name == "VelarisUI" or v.Name == "Forky" or v.Name == "ForkyHUB" then
                 pcall(function() v:Destroy() end)
             end
         end
     end
 
-    local Chloeex           = Instance.new("ScreenGui")
+    local Forky           = Instance.new("ScreenGui")
     local DropShadowHolder  = Instance.new("Frame")
     local DropShadow        = Instance.new("ImageLabel")
     local Main              = Instance.new("Frame")
@@ -418,10 +418,10 @@ function Chloex:Window(GuiConfig)
     local Min               = Instance.new("TextButton")
     local ImageLabel2       = Instance.new("ImageLabel")
 
-    Chloeex.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    Chloeex.Name = "VelarisUI"
-    Chloeex.ResetOnSpawn = false
-    Chloeex.Parent = game:GetService("CoreGui")
+    Forky.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    Forky.Name = "VelarisUI"
+    Forky.ResetOnSpawn = false
+    Forky.Parent = game:GetService("CoreGui")
 
     DropShadowHolder.BackgroundTransparency = 1
     DropShadowHolder.BorderSizePixel = 0
@@ -438,11 +438,11 @@ function Chloex:Window(GuiConfig)
 
     DropShadowHolder.ZIndex = 0
     DropShadowHolder.Name = "DropShadowHolder"
-    DropShadowHolder.Parent = Chloeex
+    DropShadowHolder.Parent = Forky
 
     DropShadowHolder.Position = UDim2.new(
-        0, (Chloeex.AbsoluteSize.X // 2 - DropShadowHolder.Size.X.Offset // 2),
-        0, (Chloeex.AbsoluteSize.Y // 2 - DropShadowHolder.Size.Y.Offset // 2)
+        0, (Forky.AbsoluteSize.X // 2 - DropShadowHolder.Size.X.Offset // 2),
+        0, (Forky.AbsoluteSize.Y // 2 - DropShadowHolder.Size.Y.Offset // 2)
     )
 
     DropShadow.Image = "rbxassetid://6015897843"
@@ -1082,7 +1082,7 @@ function Chloex:Window(GuiConfig)
     LayersPageLayout.EasingStyle = Enum.EasingStyle.Quad
 
     function GuiFunc:DestroyGui()
-        if CoreGui:FindFirstChild("VelarisUI") then Chloeex:Destroy() end
+        if CoreGui:FindFirstChild("VelarisUI") then Forky:Destroy() end
     end
 
     function GuiFunc:SetToggleKey(keyCode)
@@ -1231,7 +1231,7 @@ function Chloex:Window(GuiConfig)
             Buttons = {
                 { Name = "Yes", Callback = function()
                     AnimateClose(function()
-                        if Chloeex then Chloeex:Destroy() end
+                        if Forky then Forky:Destroy() end
                         if GuiFunc._toggleGui then
                             pcall(function() GuiFunc._toggleGui:Destroy() end)
                             GuiFunc._toggleGui = nil
