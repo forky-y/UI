@@ -37,13 +37,29 @@ local function getIconId(iconName)
     return ""
 end
 
+local function gradientText(text, startColor, endColor)
+    local result = ""
+    for i = 1, #text do
+        local pct = (i-1) / math.max(#text-1, 1)
+        local r = math.floor((startColor.R + (endColor.R - startColor.R) * pct) * 255)
+        local g = math.floor((startColor.G + (endColor.G - startColor.G) * pct) * 255)
+        local b = math.floor((startColor.B + (endColor.B - startColor.B) * pct) * 255)
+        result = result .. '<font color="rgb(' .. r .. ',' .. g .. ',' .. b .. ')">' .. text:sub(i,i) .. '</font>'
+    end
+    return result
+end
+
+local function textToClean(text)
+    return text:gsub("<[^>]+>", "")
+end
+
 local function getColor(colorInput)
     if typeof(colorInput) == "Color3" then return colorInput end
     if type(colorInput) == "string" then
         if ColorModule[colorInput] then return ColorModule[colorInput] end
-        return ColorModule["Default"] or Color3.fromRGB(0, 208, 255)
+        return ColorModule["Default"] or Color3.fromRGB(0, 225, 255)
     end
-    return ColorModule["Default"] or Color3.fromRGB(0, 208, 255)
+    return ColorModule["Default"] or Color3.fromRGB(0, 225, 255)
 end
 
 local Elements = {}
@@ -487,6 +503,19 @@ function Chloex:Window(GuiConfig)
 
     UICorner.Parent = Main
 
+    local MainGradient = Instance.new("UIGradient")
+    MainGradient.Name = "MainGradient"
+    MainGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 225, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+    })
+    MainGradient.Rotation = 45
+    MainGradient.Parent = Main
+
+    if not GuiConfig.Theme then
+        Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    end
+
     local ColorTint = Instance.new("Frame")
     ColorTint.Name = "ColorTint"
     ColorTint.Size = UDim2.new(1, 0, 1, 0)
@@ -609,7 +638,8 @@ function Chloex:Window(GuiConfig)
 
     TextLabel.Font = Enum.Font.GothamBold
     TextLabel.Text = ""
-    TextLabel.TextColor3 = GuiConfig.Color
+    TextLabel.RichText = true
+    TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TextLabel.TextSize = 14
     TextLabel.TextXAlignment = Enum.TextXAlignment.Left
     TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -624,7 +654,8 @@ function Chloex:Window(GuiConfig)
 
     TextLabel1.Font = Enum.Font.GothamBold
     TextLabel1.Text = ""
-    TextLabel1.TextColor3 = GuiConfig.Color
+    TextLabel1.RichText = true
+    TextLabel1.TextColor3 = Color3.fromRGB(255, 255, 255)
     TextLabel1.TextSize = 14
     TextLabel1.TextXAlignment = Enum.TextXAlignment.Left
     TextLabel1.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
@@ -638,13 +669,21 @@ function Chloex:Window(GuiConfig)
     if GuiConfig.Animation then
         TextLabel1.Visible = false
         task.spawn(function()
+            local cyan = Color3.fromRGB(0, 225, 255)
+            local blue = Color3.fromRGB(0, 150, 255)
             local function typeOut(text, charDelay)
                 TextLabel.Text = ""
-                for i = 1, #text do TextLabel.Text = string.sub(text, 1, i) task.wait(charDelay) end
+                for i = 1, #text do 
+                    TextLabel.Text = gradientText(string.sub(text, 1, i), cyan, blue) 
+                    task.wait(charDelay) 
+                end
             end
             local function typeErase(charDelay)
-                local current = TextLabel.Text
-                for i = #current, 1, -1 do TextLabel.Text = string.sub(current, 1, i-1) task.wait(charDelay) end
+                local current = textToClean(TextLabel.Text)
+                for i = #current, 1, -1 do 
+                    TextLabel.Text = gradientText(string.sub(current, 1, i-1), cyan, blue) 
+                    task.wait(charDelay) 
+                end
                 TextLabel.Text = ""
             end
             local titleText  = GuiConfig.Title
@@ -659,8 +698,10 @@ function Chloex:Window(GuiConfig)
             end
         end)
     else
-        TextLabel.Text  = GuiConfig.Title
-        TextLabel1.Text = GuiConfig.Footer
+        local cyan = Color3.fromRGB(0, 225, 255)
+        local blue = Color3.fromRGB(0, 150, 255)
+        TextLabel.Text  = gradientText(GuiConfig.Title, cyan, blue)
+        TextLabel1.Text = gradientText(GuiConfig.Footer, cyan, blue)
     end
 
     local TagContainer = Instance.new("Frame")
