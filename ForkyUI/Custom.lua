@@ -57,9 +57,9 @@ local function getColor(colorInput)
     if typeof(colorInput) == "Color3" then return colorInput end
     if type(colorInput) == "string" then
         if ColorModule[colorInput] then return ColorModule[colorInput] end
-        return ColorModule["Default"] or Color3.fromRGB(0, 225, 255)
+        return ColorModule["Default"] or Color3.fromRGB(255, 255, 255)
     end
-    return ColorModule["Default"] or Color3.fromRGB(0, 225, 255)
+    return ColorModule["Default"] or Color3.fromRGB(255, 255, 255)
 end
 
 local Elements = {}
@@ -506,14 +506,14 @@ function Chloex:Window(GuiConfig)
     local MainGradient = Instance.new("UIGradient")
     MainGradient.Name = "MainGradient"
     MainGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 225, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 150, 255))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
     })
     MainGradient.Rotation = 45
     MainGradient.Parent = Main
 
     if not GuiConfig.Theme then
-        Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Main.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     end
 
     local ColorTint = Instance.new("Frame")
@@ -669,8 +669,8 @@ function Chloex:Window(GuiConfig)
     if GuiConfig.Animation then
         TextLabel1.Visible = false
         task.spawn(function()
-            local cyan = Color3.fromRGB(0, 225, 255)
-            local blue = Color3.fromRGB(0, 150, 255)
+            local cyan = Color3.fromRGB(255, 255, 255)
+            local blue = Color3.fromRGB(180, 180, 180)
             local function typeOut(text, charDelay)
                 TextLabel.Text = ""
                 for i = 1, #text do 
@@ -698,8 +698,8 @@ function Chloex:Window(GuiConfig)
             end
         end)
     else
-        local cyan = Color3.fromRGB(0, 225, 255)
-        local blue = Color3.fromRGB(0, 150, 255)
+        local cyan = Color3.fromRGB(255, 255, 255)
+        local blue = Color3.fromRGB(180, 180, 180)
         TextLabel.Text  = gradientText(GuiConfig.Title, cyan, blue)
         TextLabel1.Text = gradientText(GuiConfig.Footer, cyan, blue)
     end
