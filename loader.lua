@@ -23,9 +23,9 @@ _G.ForkyHUB.Games = {
         name = "Sailor Piece",
         url = "https://raw.githubusercontent.com/forky-y/UI/refs/heads/main/ssl.lua"
     },
-    [999999999] = {
-        name = "Fishzar",
-        url = ""
+    [89469502395769] = {
+        name = "Kick a Lucky Block",
+        url = "https://pastefy.app/nqaprTdX/raw"
     }
 }
 
