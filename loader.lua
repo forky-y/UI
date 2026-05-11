@@ -19,6 +19,10 @@ _G.ForkyHUB.Games = {
         name = "Drag Drive Simulator",
         url = "https://gitlab.com/forky1/forkyHUB/-/raw/main/ddds.lua"
     },
+    [92416421522960] = {
+        name = "Slime RNG",
+        url = "https://gitlab.com/forky1/other/-/raw/main/srng.lua"
+    },
     [77747658251236] = {
         name = "Sailor Piece",
         url = "https://raw.githubusercontent.com/forky-y/UI/refs/heads/main/ssl.lua"
