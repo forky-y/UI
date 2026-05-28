@@ -32,7 +32,11 @@ _G.ForkyHUB.Games = {
         url = "https://raw.githubusercontent.com/forky-y/UI/refs/heads/main/ssl.lua"
     },
     [110369730911937] = {
-        name = "CDID",
+        name = "East JavaCDID",
+        url = "https://pastefy.app/1tjD28LE/raw"
+    },
+    [9508940498] = {
+        name = "Central Java CDID",
         url = "https://pastefy.app/1tjD28LE/raw"
     },
     [132986577553100] = {
