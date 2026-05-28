@@ -19,6 +19,10 @@ _G.ForkyHUB.Games = {
         name = "Drag Drive Simulator",
         url = "https://gitlab.com/forky1/dds/-/raw/main/dedees_free.lua"
     },
+    [132986577553100] = {
+        name = "Seasonal CDID",
+        url = "https://pastefy.app/HvjRamJZ/raw"
+    },
     [77747658251236] = {
         name = "Sailor Piece",
         url = "https://raw.githubusercontent.com/forky-y/UI/refs/heads/main/ssl.lua"
