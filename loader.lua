@@ -33,11 +33,11 @@ _G.ForkyHUB.Games = {
     },
     [110369730911937] = {
         name = "East JavaCDID",
-        url = "https://pastefy.app/y2bA6em3/raw"
+        url = "https://pastefy.app/gPnP6gEh/raw"
     },
     [9508940498] = {
         name = "Central Java CDID",
-        url = "https://pastefy.app/y2bA6em3/raw"
+        url = "https://pastefy.app/gPnP6gEh/raw"
     },
     [132986577553100] = {
         name = "Seasonal CDID",
