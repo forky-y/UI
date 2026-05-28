@@ -35,6 +35,10 @@ _G.ForkyHUB.Games = {
         name = "CDID",
         url = "https://pastefy.app/1tjD28LE/raw"
     },
+    [132986577553100] = {
+        name = "Seasonal CDID",
+        url = "https://pastefy.app/HvjRamJZ/raw"
+    },
     [89469502395769] = {
         name = "Kick a Lucky Block",
         url = "https://pastefy.app/nqaprTdX/raw"
