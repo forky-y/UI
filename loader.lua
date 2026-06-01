@@ -5,7 +5,7 @@ _G.ForkyHUB = _G.ForkyHUB or {}
 _G.ForkyHUB.Games = {
     [2693023319] = {
         name = "Expedition Antarctica",
-        url = "https://gitlab.com/forky1/forkyHUB/-/raw/main/artic.lua"
+        url = "https://pastefy.app/q1Dh7N9C/raw"
     },
     [129118369937980] = {
         name = "Eagle Nation",
