@@ -756,6 +756,7 @@ local function SendChatLog(senderName, message)
     if url == "" then return end
     local player   = FindPlayer(senderName)
     local thumbUrl = player and (AvatarCache[player.UserId] or GetAvatarUrl(player)) or nil
+
     PostWebhook(url, {
         username   = WEBHOOK_NAME,
         avatar_url = WEBHOOK_AVATAR,
@@ -952,7 +953,7 @@ local function HookChat()
                 CheckAndSend(text)
             else
                 local senderName = msg.TextSource and msg.TextSource.Name or "Unknown"
-                SendChatLog(senderName, text)
+                SendChatLog(senderName, StripTags(text))
             end
         end)
     end
@@ -969,7 +970,7 @@ local function HookChat()
                     CheckAndSend(d.Message)
                 else
                     local sender = d.FromSpeaker or d.SpeakerName or "Unknown"
-                    SendChatLog(sender, d.Message)
+                    SendChatLog(sender, StripTags(d.Message))
                 end
             end)
         end
