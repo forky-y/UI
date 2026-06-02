@@ -1,5 +1,5 @@
 -- ============================================================
---  Forky Server Monitor  |  Discord: @bloxgank
+--  Forky Server Monitor  |  Discord: @agil2
 -- ============================================================
 
 local HttpService        = game:GetService("HttpService")
