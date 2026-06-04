@@ -484,7 +484,7 @@ local function RegisterPlayer(player)
     end
 
     if not NameStats[ul] then
-        NameStats[ul] = { name = uname, secretList = {}, totalPoin = 0, catches = {} }
+        NameStats[ul] = { name = uname, secretList = {}, secretCount = 0, forgottenCount = 0, totalPoin = 0, catches = {} }
     end
 
     -- Alias display name ke canonical entry
@@ -814,7 +814,7 @@ local function RestoreGalatamaState()
             for playerName, data in pairs(saveData) do
                 local lname = playerName:lower()
                 if not NameStats[lname] then
-                    NameStats[lname] = { name = playerName, secretList = {}, totalPoin = 0, catches = {} }
+                    NameStats[lname] = { name = playerName, secretList = {}, secretCount = 0, forgottenCount = 0, totalPoin = 0, catches = {} }
                 end
                 if (data.totalPoin or 0) > (NameStats[lname].totalPoin or 0) then
                     NameStats[lname].totalPoin = data.totalPoin or 0
@@ -871,7 +871,49 @@ local function SendLeaderboard(isFinal)
         merged[key].forgotten = stats.forgottenCount or 0
     end
 
+    local function isForgottenFish(name)
+        for _, value in ipairs(ForgottenList) do
+            if string.lower(value) == string.lower(name) then
+                return true
+            end
+        end
+        return false
+    end
+
     local leaderData = {}
+    local seenNameStats = {}
+
+    -- Include offline / fallback name-based stats
+    for lname, ns in pairs(NameStats) do
+        if type(ns) == "table" and not seenNameStats[ns] then
+            seenNameStats[ns] = true
+            local linkedUid = PlayerNameToId[lname]
+            if not (linkedUid and merged[tostring(linkedUid)]) then
+                local secretCount = ns.secretCount
+                local forgottenCount = ns.forgottenCount
+                local needsCount = (secretCount == nil or forgottenCount == nil)
+                if secretCount == nil then secretCount = 0 end
+                if forgottenCount == nil then forgottenCount = 0 end
+                if needsCount then
+                    for fishName, count in pairs(ns.secretList or {}) do
+                        if isForgottenFish(fishName) then
+                            forgottenCount = forgottenCount + count
+                        else
+                            secretCount = secretCount + count
+                        end
+                    end
+                end
+                if (secretCount + forgottenCount) > 0 then
+                    local entry = { name = ns.name or lname, total = secretCount + forgottenCount, secret = secretCount, forgotten = forgottenCount, fishList = {} }
+                    for fishName, count in pairs(ns.secretList or {}) do
+                        table.insert(entry.fishList, fishName .. " x" .. count)
+                    end
+                    merged["name_" .. lname] = entry
+                end
+            end
+        end
+    end
+
     for _, entry in pairs(merged) do
         if (entry.secret + entry.forgotten) > 0 then
             table.sort(entry.fishList)
@@ -1157,7 +1199,7 @@ local function CheckAndSend(rawMsg)
     end
 
     if not NameStats[lname] then
-        NameStats[lname] = { name = canonicalName, secretList = {}, totalPoin = 0, catches = {} }
+        NameStats[lname] = { name = canonicalName, secretList = {}, secretCount = 0, forgottenCount = 0, totalPoin = 0, catches = {} }
     end
 
     -- 1. Crystalized Legendary
@@ -1203,6 +1245,11 @@ local function CheckAndSend(rawMsg)
             PlayerStats[uid].secretList[baseName] = (PlayerStats[uid].secretList[baseName] or 0) + 1
         end
         NameStats[lname].secretList[baseName] = (NameStats[lname].secretList[baseName] or 0) + 1
+        if isForgotten then
+            NameStats[lname].forgottenCount = (NameStats[lname].forgottenCount or 0) + 1
+        else
+            NameStats[lname].secretCount = (NameStats[lname].secretCount or 0) + 1
+        end
 
         -- Galatama points
         local galBase  = FindGalatamaFish(data.fish)
