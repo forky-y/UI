@@ -742,7 +742,7 @@ local function BuildEmbed(title, description, color, fields, imageUrl, thumbUrl,
         description = description,
         color       = color,
         fields      = fields,
-        footer      = { text = (footerTag or "Forky Webhook") .. " | " .. os.date("%X") },
+        footer      = { text = (footerTag or "ForkyHUB") .. " | " .. os.date("%X") },
         timestamp   = os.date("!%Y-%m-%dT%H:%M:%SZ"),
     }
     if imageUrl then embed.image     = { url = imageUrl } end
@@ -937,7 +937,7 @@ local function RestoreGalatamaState()
                     embeds = { BuildEmbed(
                         "♻️ DATA GALATAMA DIPULIHKAN",
                         "Point **" .. restoredCount .. "** pemain berhasil di-restore dari sesi sebelumnya.",
-                        3066993, {}, nil, nil, "Forky Galatama"
+                        3066993, {}, nil, nil, "ForkyHUB — Galatama"
                     )},
                 })
             end
@@ -1231,12 +1231,12 @@ local function SendChatLog(senderName, message)
     end
 
     PostWebhook(url, {
-        username   = WEBHOOK_NAME,
-        avatar_url = WEBHOOK_AVATAR,
+        username   = WH_IDENTITY.chat.name,
+        avatar_url = WH_IDENTITY.chat.avatar,
         embeds = { BuildEmbed("💬 CHAT LOG", nil, 5793266, {
             BuildFieldContent("👤", "Player",  "**" .. displaySender .. "**", true),
             BuildFieldContent("💬", "Message", message,                        false),
-        }, nil, thumbUrl, "Forky Chat Log") },
+        }, nil, thumbUrl, "ForkyHUB — Chat Log") },
     })
 end
 
@@ -1517,8 +1517,8 @@ local function SendEventWebhook(eventData)
     if url == "" then return end
     local roleMent = DISCORD_ROLE_ID ~= "" and ("<@&" .. DISCORD_ROLE_ID .. ">") or nil
     PostWebhook(url, {
-        username   = WEBHOOK_NAME,
-        avatar_url = WEBHOOK_AVATAR,
+        username   = WH_IDENTITY.event.name,
+        avatar_url = WH_IDENTITY.event.avatar,
         content    = roleMent and (roleMent .. " 📢 **Event dimulai!**") or nil,
         embeds = { BuildEmbed(
             eventData.title,
@@ -1529,7 +1529,7 @@ local function SendEventWebhook(eventData)
                 BuildFieldContent("👥", "Total Player",  "**" .. tostring(#Players:GetPlayers()) .. "** orang", true),
                 BuildFieldContent("🕐", "Waktu Mulai",   os.date("%H:%M:%S"),                                   true),
             },
-            nil, nil, "Forky Event Monitor"
+            nil, nil, "ForkyHUB — Event Hunt"
         )},
     })
 end
@@ -1689,8 +1689,8 @@ local function StartMonitoring()
                 LeaveTimers[pId] = nil
                 local notBackContent = BuildContent(mentionStr, "notback")
                 PostWebhook(WEBHOOK_URL, {
-                    username   = WEBHOOK_NAME,
-                    avatar_url = WEBHOOK_AVATAR,
+                    username   = WH_IDENTITY.url.name,
+                    avatar_url = WH_IDENTITY.url.avatar,
                     content    = notBackContent,
                     embeds = { BuildEmbed("⏰ PLAYER TIDAK KEMBALI", nil, 16711680, {
                         BuildFieldContent("👤", "Player",    "**" .. pName .. "**",           true),
@@ -2017,8 +2017,8 @@ local function CreateUI()
             editBtn.Text             = "✏️ EDIT WEBHOOK"
             editBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 180)
             PostWebhook(WEBHOOK_URL ~= "" and WEBHOOK_URL or WEBHOOK_STATS, {
-                username   = WEBHOOK_NAME,
-                avatar_url = WEBHOOK_AVATAR,
+                username   = WH_IDENTITY.stats.name,
+                avatar_url = WH_IDENTITY.stats.avatar,
                 embeds = { BuildEmbed("⚙️ KONFIGURASI DIPERBARUI", nil, 16776960, {
                     BuildFieldContent("ℹ️", "Info", "Webhook & config berhasil diubah.", false),
                 }, nil, nil) },
