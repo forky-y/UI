@@ -22,9 +22,22 @@ local WEBHOOK_CHAT          = "https://discord.com/api/webhooks/1511291170309800
 local WEBHOOK_GALATAMA      = "https://discord.com/api/webhooks/1512015161949425766/KJvYJHiRylTtrDislJB5SoRxu159RHRqtfccHqBIWI3Ea79UF523hAGvMVUqpzJMaII5"   -- isi lewat UI atau hardcode di sini
 local DISCORD_ROLE_ID       = ""
 local PROXY                 = "https://square-haze-a007.remediashop.workers.dev"
-local WEBHOOK_NAME          = "ForkyHUB - Live Monitor"
-local WEBHOOK_AVATAR        = "https://www.image2url.com/r2/default/images/1777666815405-eb5a3d95-9946-4914-b8aa-985e8f672557.png"
 local SCRIPT_ACTIVE         = false
+
+-- Per-webhook identity (nama + avatar masing-masing)
+local WH_IDENTITY = {
+    url       = { name = "ForkyHUB — Join/Leave",    avatar = "https://www.image2url.com/r2/default/images/1777666815405-eb5a3d95-9946-4914-b8aa-985e8f672557.png" },
+    stats     = { name = "ForkyHUB — Server Stats",  avatar = "https://www.image2url.com/r2/default/images/1777666815405-eb5a3d95-9946-4914-b8aa-985e8f672557.png" },
+    lb        = { name = "ForkyHUB — Leaderboard",   avatar = "https://www.image2url.com/r2/default/images/1777666815405-eb5a3d95-9946-4914-b8aa-985e8f672557.png" },
+    fish      = { name = "ForkyHUB — Secret Fish",   avatar = "https://www.image2url.com/r2/default/images/1777666815405-eb5a3d95-9946-4914-b8aa-985e8f672557.png" },
+    chat      = { name = "ForkyHUB — Chat Log",      avatar = "https://www.image2url.com/r2/default/images/1777666815405-eb5a3d95-9946-4914-b8aa-985e8f672557.png" },
+    galatama  = { name = "ForkyHUB — Galatama",      avatar = "https://www.image2url.com/r2/default/images/1777666815405-eb5a3d95-9946-4914-b8aa-985e8f672557.png" },
+    event     = { name = "ForkyHUB — Event Hunt",    avatar = "https://www.image2url.com/r2/default/images/1777666815405-eb5a3d95-9946-4914-b8aa-985e8f672557.png" },
+}
+
+-- Alias compat (masih dipakai di beberapa tempat)
+local WEBHOOK_NAME   = WH_IDENTITY.url.name
+local WEBHOOK_AVATAR = WH_IDENTITY.url.avatar
 
 -- Galatama persist via Discord Bot
 local BOT_TOKEN             = ""
@@ -72,6 +85,59 @@ local GalatamaRarity = {
 
 local MutasiNoBonus         = { "big", "shiny" }
 local GALATAMA_MUTASI_BONUS = 100
+
+-- ============================================================
+--  EVENT HUNT DATABASE
+-- ============================================================
+
+local EVENT_COOLDOWN_SECONDS = 120
+
+local EventHuntData = {
+    {
+        textTriggers = { "treasure hunt" },
+        title        = "💰 Treasure Hunt Dimulai!",
+        description  = "katakan Peta 🗺️",
+        color        = 16766720,
+        emoji        = "💰",
+    },
+    {
+        textTriggers = { "dark megalodon hunt", "dark megalodon" },
+        title        = "🌑 Dark Megalodon Hunt Dimulai!",
+        description  = "Dark Mega guys 🦈",
+        color        = 2303786,
+        emoji        = "🌑",
+    },
+    {
+        textTriggers = { "megalodon hunt" },
+        title        = "🦈 Megalodon Hunt Dimulai!",
+        description  = "Mega guys 🎣",
+        color        = 3447003,
+        emoji        = "🦈",
+    },
+    {
+        textTriggers = { "thunderzilla hunt", "thunderzilla" },
+        title        = "⚡ Thunderzilla Hunt Dimulai!",
+        description  = "zilla oi ⚡",
+        color        = 16776960,
+        emoji        = "⚡",
+    },
+    {
+        textTriggers = { "crystals have spawned", "crystals have", "crystal" },
+        title        = "💎 Crystal Event Dimulai!",
+        description  = "Crystal muncul gas nambang 💎",
+        color        = 1146986,
+        emoji        = "💎",
+    },
+    {
+        textTriggers = { "aurora borealis", "aurora event" },
+        title        = "💫 Aurora Borealis!",
+        description  = "cantiknyooo 💫",
+        color        = 9055202,
+        emoji        = "💫",
+    },
+}
+
+local EventCooldown = {}
 
 -- ============================================================
 --  REQUEST HELPER
@@ -151,8 +217,10 @@ local function UpdateLiveWebhook()
     if WEBHOOK_STATS == "" then return end
 
     local body = {
-        embeds = {{ title = "LIVE Server Monitor", description = description, color = color, fields = fields,
-            footer = { text = "LIVE Server Monitor | Last Update" },
+        username   = WH_IDENTITY.stats.name,
+        avatar_url = WH_IDENTITY.stats.avatar,
+        embeds = {{ title = "📡 ForkyHUB — Live Server Monitor", description = description, color = color, fields = fields,
+            footer = { text = "ForkyHUB — Server Stats | Last Update" },
             timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ") }}
     }
 
@@ -329,71 +397,86 @@ local FishChanceData = {
     
 }
 
+local NP = "https://raw.githubusercontent.com/revkatomy-max/new-pisit-image/main/"
+local AI = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/"
+local PI = "https://raw.githubusercontent.com/revkatomy-max/pisit-image/main/"
+
 local FishImageURL = {
-    ["Monster Shark"]            = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Monster%20Shark.png",
-    ["Megalodon"]                = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Megalodon.png",
-    ["Ancient Lochness Monster"] = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Ancient%20Lochness%20Monster.png",
-    ["Ancient Magma Whale"]      = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Ancient%20Magma%20Whale.png",
-    ["Ancient Whale"]            = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Ancient%20Whale.png",
-    ["Bloodmoon Whale"]          = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Bloodmoon%20Whale.png",
-    ["Blob Shark"]               = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Blob%20Shark.png",
-    ["Bonemaw Tyrant"]           = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Bonemaw%20Tyrant.png",
-    ["Bone Whale"]               = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Bone%20Whale.png",
-    ["Cosmic Mutant Shark"]      = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Cosmic%20Mutant%20Shark.png",
-    ["Cryoshade Glider"]         = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Cryoshade%20Glider.png",
-    ["Crystal Crab"]             = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Crystal%20Crab.png",
-    ["Cursed Kraken"]            = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Cursed%20Kraken.png",
-    ["Depthseeker Ray"]          = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Depthseeker%20Ray.png",
-    ["Eerie Shark"]              = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Eerie%20Shark.png",
-    ["Elpirate Gran Maja"]       = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Elpirate%20Gran%20Maja.png",
-    ["Elshark Gran Maja"]        = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Elshark%20Gran%20Maja.png",
-    ["Frostborn Shark"]          = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Frostborn%20Shark.png",
-    ["Ghost Shark"]              = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Ghost%20Shark.png",
-    ["Giant Squid"]              = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Giant%20Squid.png",
-    ["Gladiator Shark"]          = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Gladiator%20Shark.png",
-    ["Great Whale"]              = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Great%20Whale.png",
-    ["Ketupat Whale"]            = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Ketupat%20Whale.png",
-    ["King Crab"]                = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/King%20Crab.png",
-    ["King Jelly"]               = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/King%20Jelly.png",
-    ["Leviathan"]                = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Leviathan.png",
-    ["Lochness Monster"]         = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Lochness%20Monster.png",
-    ["Mosasaur Shark"]           = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Mosasaur%20Shark.png",
-    ["Orca"]                     = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Orca.png",
-    ["Panther Eel"]              = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Panther%20Eel.png",
-    ["Pirate Megalodon"]         = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Pirate%20Megalodon.png",
-    ["Queen Crab"]               = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Queen%20Crab.png",
-    ["Rainbow Comet Shark"]      = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Rainbow%20Comet%20Shark.png",
-    ["Robot Kraken"]             = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Robot%20Kraken.png",
-    ["Ruby"]                     = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Ruby%20Gemstone.png",
-    ["Sea Eater"]                = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Sea%20Eater.png",
-    ["Skeleton Narwhal"]         = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Skeleton%20Narwhal.png",
-    ["Thin Armor Shark"]         = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Thin%20Armor%20Shark.png",
-    ["Thunderzilla"]             = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Thunderzilla.png",
-    ["Strawberry Orca"]          = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Strawberry%20Orca.png",
-    ["Eggy Enchant Stone"]       = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Eggy%20Enchant%20Stone.png",
-    ["Worm Fish"]                = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Worm%20Fish.png",
-    ["Iridesca"]                 = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Iridesca.png",
-    ["Deepsea Monster Axolotl"]  = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Deepsea%20Monster%20Axolotl.jpeg",
-    ["Blocky Lochness Monster"]  = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Blocky%20Lochness%20Monster.jpeg",
-    ["Frostbite Leviathan"]      = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Frostbite%20Leviathan.jpeg",
-    ["Aurelion"]                 = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Aurelion.png",
-    ["Frogalloon"]               = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Frogallon.png",
-    ["Scare"]                    = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Scare.png",
-    ["Viridis Lurker"]           = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Viridis%20Lurker.jpg",
-    ["Fluorivane"]               = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Fluorivane.png",
-    ["Coral Whale"]              = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Coral%20Whale.png",
-    ["Runic Enchant Stone"]      = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Runic%20Enchant%20Stone.png",
-    ["Flame Tyrant"]             = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Flame%20Tyrant.png",
-    ["Cerulean Dragon"]          = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Cerulean%20Dragon.png",
-    ["Withering Core"]           = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Withering%20Core.png",
-    ["Machodon"]                 = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Machodon.png",
-    ["Scorching Veinmaw"]        = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Scorching%20Veinmaw.png",
-    ["Crystalline Behemoth"]     = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/crisstalline%20behemoth.png",
-    ["Frostmoon Whale"]          = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/frostmoon%20whale.png",
-    ["Crystal Goliath"]          = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/crystal%20Goliath.png",
-    [""]                         = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/SC%20baru.png",
-    ["Elemental Tempestray"]     = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/Elemental%20Tempestray.png",
-    ["Dark Megalodon"]           = "https://raw.githubusercontent.com/revkatomy-max/asset-id/main/dark%20megalodon.png",
+    -- new-pisit-image repo (kualitas lebih baik)
+    ["Frostborn Shark"]          = NP .. "9.png",
+    ["Crystalline Behemoth"]     = NP .. "10.png",
+    ["Crystal Goliath"]          = NP .. "11.png",
+    ["Elemental Tempestray"]     = NP .. "13.png",
+    ["Dark Megalodon"]           = NP .. "14.png",
+    ["Withering Core"]           = NP .. "16.png",
+    ["Flame Tyrant"]             = NP .. "17.png",
+    ["Scorching Veinmaw"]        = NP .. "18.png",
+    ["Cerulean Dragon"]          = NP .. "19.png",
+    ["King Crab"]                = NP .. "21.png",
+    ["Queen Crab"]               = NP .. "22.png",
+    ["Panther Eel"]              = NP .. "23.png",
+    ["Cryoshade Glider"]         = NP .. "24.png",
+    ["Giant Squid"]              = NP .. "25.png",
+    ["Depthseeker Ray"]          = NP .. "26.png",
+    ["Robot Kraken"]             = NP .. "27.png",
+    ["Ghost Shark"]              = NP .. "29.png",
+    ["Skeleton Narwhal"]         = NP .. "30.png",
+    ["Blob Shark"]               = NP .. "31.png",
+    ["Worm Fish"]                = NP .. "32.png",
+    ["Cosmic Mutant Shark"]      = NP .. "33.png",
+    ["Megalodon"]                = NP .. "34.png",
+    ["Bloodmoon Whale"]          = NP .. "36.png",
+    ["Frostmoon Whale"]          = NP .. "37.png",
+    ["Thunderzilla"]             = NP .. "38.png",
+    ["Thin Armor Shark"]         = NP .. "40.png",
+    ["Scare"]                    = NP .. "41.png",
+    ["Lochness Monster"]         = NP .. "43.png",
+    ["Ancient Magma Whale"]      = NP .. "44.png",
+    ["Crystal Crab"]             = NP .. "46.png",
+    ["Orca"]                     = NP .. "47.png",
+    ["Eerie Shark"]              = NP .. "49.png",
+    ["Monster Shark"]            = NP .. "50.png",
+    ["Eggy Enchant Stone"]       = NP .. "52.png",
+    ["Strawberry Orca"]          = NP .. "53.png",
+    ["Iridesca"]                 = NP .. "54.png",
+    ["Frogalloon"]               = NP .. "56.png",
+    ["Blocky Lochness Monster"]  = NP .. "57.png",
+    ["Aurelion"]                 = NP .. "58.png",
+    ["Frostbite Leviathan"]      = NP .. "59.png",
+    ["Runic Enchant Stone"]      = NP .. "61.png",
+    ["Bonemaw Tyrant"]           = NP .. "00.png",
+    ["Mutant Runic Koi"]         = NP .. "62.png",
+    ["Deepsea Monster Axolotl"]  = NP .. "63.png",
+    ["Fluorivane"]               = NP .. "64.png",
+    ["Sea Eater"]                = NP .. "65.png",
+    ["Pirate Megalodon"]         = NP .. "67.png",
+    ["Elpirate Gran Maja"]       = NP .. "68.png",
+    ["Cursed Kraken"]            = NP .. "69.png",
+    ["Mosasaur Shark"]           = NP .. "71.png",
+    ["King Jelly"]               = NP .. "72.png",
+    ["Gladiator Shark"]          = NP .. "75.png",
+    ["Ancient Lochness Monster"] = NP .. "76.png",
+    ["Elshark Gran Maja"]        = NP .. "77.png",
+    ["Viridis Lurker"]           = NP .. "78.png",
+    ["Bone Whale"]               = NP .. "79.png",
+    ["Ancient Whale"]            = NP .. "80.png",
+    ["Great Whale"]              = NP .. "82.png",
+    ["Coral Whale"]              = NP .. "83.png",
+    ["Love Nessie"]              = NP .. "85.png",
+    ["Broken Heart Nessie"]      = NP .. "86.png",
+    ["Caustic Maw"]              = NP .. "97.png",
+    -- asset-id repo (ikan yang belum ada di new-pisit-image)
+    ["Ketupat Whale"]            = AI .. "Ketupat%20Whale.png",
+    ["Leviathan"]                = AI .. "Leviathan.png",
+    ["Rainbow Comet Shark"]      = AI .. "Rainbow%20Comet%20Shark.png",
+    -- pisit-image repo
+    ["Ruby"]                     = PI .. "1.png",
+    ["Machodon"]                 = PI .. "42.png",
+    -- misc
+    ["Glacial Serpent"]          = AI .. "SC%20baru.png",
+    ["Crystal"]                  = NP .. "crystal.png",
+    ["treasure hunt"]            = NP .. "treasure.png",
+    ["Aurora"]                   = NP .. "99.png",
 }
 
 -- ============================================================
@@ -422,6 +505,7 @@ local ServerStats = {
 -- Persistent message refs
 local LeaderboardMsgRef = { nil }
 local StatsMsgRef       = { nil }
+local GalatamaMsgRef    = { nil }
 
 -- ============================================================
 --  UTILITY
@@ -737,8 +821,8 @@ local function SendWebhook(title, description, color, fields, imageUrl, thumbUrl
     local f = {}; for _, v in ipairs(fields) do table.insert(f, v) end
     local content = BuildContent(mention, captionType)
     PostWebhook(WEBHOOK_URL, {
-        username   = WEBHOOK_NAME,
-        avatar_url = WEBHOOK_AVATAR,
+        username   = WH_IDENTITY.url.name,
+        avatar_url = WH_IDENTITY.url.avatar,
         content    = content,
         embeds     = { BuildEmbed(title, description, color, f, imageUrl, thumbUrl) },
     })
@@ -750,8 +834,8 @@ local function SendFishWebhook(title, description, color, fields, imageUrl, thum
     local f = {}; for _, v in ipairs(fields) do table.insert(f, v) end
     local content = BuildContent(mention, captionType)
     PostWebhook(url, {
-        username   = WEBHOOK_NAME,
-        avatar_url = WEBHOOK_AVATAR,
+        username   = WH_IDENTITY.fish.name,
+        avatar_url = WH_IDENTITY.fish.avatar,
         content    = content,
         embeds     = { BuildEmbed(title, description, color, f, imageUrl, thumbUrl) },
     })
@@ -848,8 +932,8 @@ local function RestoreGalatamaState()
             if restoredCount > 0 then
                 local url = (WEBHOOK_GALATAMA ~= "") and WEBHOOK_GALATAMA or WEBHOOK_URL
                 PostWebhook(url, {
-                    username   = WEBHOOK_NAME,
-                    avatar_url = WEBHOOK_AVATAR,
+                    username   = WH_IDENTITY.galatama.name,
+                    avatar_url = WH_IDENTITY.galatama.avatar,
                     embeds = { BuildEmbed(
                         "♻️ DATA GALATAMA DIPULIHKAN",
                         "Point **" .. restoredCount .. "** pemain berhasil di-restore dari sesi sebelumnya.",
@@ -974,10 +1058,10 @@ local function SendLeaderboard(isFinal)
     local contentMsg = isFinal and (roleMent and roleMent .. " 📢 **Leaderboard Final! Monitor disconnect.**") or nil
 
     local body = {
-        username   = WEBHOOK_NAME,
-        avatar_url = WEBHOOK_AVATAR,
+        username   = WH_IDENTITY.lb.name,
+        avatar_url = WH_IDENTITY.lb.avatar,
         content    = contentMsg,
-        embeds     = { BuildEmbed(title, description, 16766720, fields, nil, nil, "Forky Leaderboard") },
+        embeds     = { BuildEmbed(title, description, 16766720, fields, nil, nil, "ForkyHUB — Leaderboard") },
     }
 
     if isFinal then
@@ -1062,14 +1146,23 @@ local function SendGalatamaLeaderboard(isFinal)
     local url = (WEBHOOK_GALATAMA ~= "") and WEBHOOK_GALATAMA or WEBHOOK_STATS
     if url == "" then return end
 
-    PostWebhook(url, {
-        username   = WEBHOOK_NAME,
-        avatar_url = WEBHOOK_AVATAR,
+    local body = {
+        username   = WH_IDENTITY.galatama.name,
+        avatar_url = WH_IDENTITY.galatama.avatar,
         content    = contentMsg,
         embeds     = { BuildEmbed(title,
             "```\nBlob Shark=25 | Ghost Shark=50 | Skeleton Narwhal=60 | Worm Fish=300 | Megalodon=400\nBonus Mutasi (kecuali Big & Shiny): +100pts\n```",
-            16766720, fields, nil, nil, "Forky Galatama") },
-    })
+            16766720, fields, nil, nil, "ForkyHUB — Galatama") },
+    }
+
+    if isFinal then
+        -- Final: kirim pesan baru (bukan edit) biar ada mention role
+        PostWebhook(url, body)
+        GalatamaMsgRef[1] = nil  -- reset supaya sesi berikutnya mulai fresh
+    else
+        -- Update: edit pesan yang sama, tidak spam
+        PatchOrPostWebhook(url, body, GalatamaMsgRef, nil)
+    end
 end
 
 local function SendFinalLeaderboard()
@@ -1110,9 +1203,9 @@ local function SendServerStats()
     LastStatsSnapshot = snapshot
 
     local body = {
-        username   = WEBHOOK_NAME,
-        avatar_url = WEBHOOK_AVATAR,
-        embeds     = { BuildEmbed("🌐 SERVER STATS", nil, 3447003, fields, nil, nil, "Forky Stats") },
+        username   = WH_IDENTITY.stats.name,
+        avatar_url = WH_IDENTITY.stats.avatar,
+        embeds     = { BuildEmbed("📊 SERVER STATS", nil, 3447003, fields, nil, nil, "ForkyHUB — Server Stats") },
     }
 
     PatchOrPostWebhook(WEBHOOK_STATS, body, StatsMsgRef, nil)
@@ -1416,6 +1509,82 @@ local function HookChat()
 end
 
 -- ============================================================
+--  EVENT HUNT DETECTION
+-- ============================================================
+
+local function SendEventWebhook(eventData)
+    local url = (WEBHOOK_URL ~= "") and WEBHOOK_URL or ""
+    if url == "" then return end
+    local roleMent = DISCORD_ROLE_ID ~= "" and ("<@&" .. DISCORD_ROLE_ID .. ">") or nil
+    PostWebhook(url, {
+        username   = WEBHOOK_NAME,
+        avatar_url = WEBHOOK_AVATAR,
+        content    = roleMent and (roleMent .. " 📢 **Event dimulai!**") or nil,
+        embeds = { BuildEmbed(
+            eventData.title,
+            eventData.description,
+            eventData.color,
+            {
+                BuildFieldContent("🎣", "Host Server",   "**" .. Players.LocalPlayer.Name .. "**",              true),
+                BuildFieldContent("👥", "Total Player",  "**" .. tostring(#Players:GetPlayers()) .. "** orang", true),
+                BuildFieldContent("🕐", "Waktu Mulai",   os.date("%H:%M:%S"),                                   true),
+            },
+            nil, nil, "Forky Event Monitor"
+        )},
+    })
+end
+
+local function ProcessEventText(text)
+    if not SCRIPT_ACTIVE then return end
+    if not text or text == "" then return end
+    local lower = text:lower()
+
+    local isRelevant = lower:find("hunt") or lower:find("started") or lower:find("crystal")
+        or lower:find("spawned") or lower:find("aurora")
+    if not isRelevant then return end
+
+    for _, evData in ipairs(EventHuntData) do
+        for _, trigger in ipairs(evData.textTriggers) do
+            if lower:find(trigger, 1, true) then
+                local now = os.time()
+                if (now - (EventCooldown[evData.title] or 0)) >= EVENT_COOLDOWN_SECONDS then
+                    EventCooldown[evData.title] = now
+                    SendEventWebhook(evData)
+                end
+                return
+            end
+        end
+    end
+end
+
+local _hookedLabels = {}
+
+local function HookLabel(label)
+    if _hookedLabels[label] then return end
+    _hookedLabels[label] = true
+    ProcessEventText(label.Text)
+    label:GetPropertyChangedSignal("Text"):Connect(function()
+        ProcessEventText(label.Text)
+    end)
+end
+
+local function StartEventMonitor()
+    task.spawn(function()
+        local pg = Players.LocalPlayer:WaitForChild("PlayerGui", 30)
+        if not pg then return end
+        for _, v in ipairs(pg:GetDescendants()) do
+            if v:IsA("TextLabel") or v:IsA("TextButton") then HookLabel(v) end
+        end
+        pg.DescendantAdded:Connect(function(v)
+            if v:IsA("TextLabel") or v:IsA("TextButton") then
+                task.wait(0)
+                HookLabel(v)
+            end
+        end)
+    end)
+end
+
+-- ============================================================
 --  START MONITORING
 -- ============================================================
 
@@ -1454,6 +1623,7 @@ local function StartMonitoring()
     end)
 
     HookChat()
+    StartEventMonitor()
     SendLeaderboard(false)
 
     -- Leaderboard loop
