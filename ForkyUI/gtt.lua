@@ -298,16 +298,16 @@ local SecretFishList = {
     "Runic Enchant Stone", "Frogalloon", "Coral Whale", "Flame Tyrant", "Withering Core",
     "Sea Eater", "Thunderzilla", "Iridesca", "Frostbite Leviathan", "Fluorivane",
     "Cerulean Dragon", "Machodon", "Scorching Veinmaw", "Crystalline Behemoth",
-    "Frostmoon Whale", "Crystal Goliath", "Eggy Enchant Stone", "Dark Megalodon", "Elemental Tempestray", "Glacial Serpent", "Caustic Maw", "Coral Reaper", "Sunken Hadalith",
+    "Frostmoon Whale", "Crystal Goliath", "Eggy Enchant Stone", "Dark Megalodon", "Elemental Tempestray",
 }
 
 local ForgottenList = {
-    "Sea Eater", "Thunderzilla", "Iridesca", "Frostbite Leviathan", "Fluorivane", "Cerulean Dragon", "Crystalline Behemoth", "Trench Warden",
+    "Sea Eater", "Thunderzilla", "Iridesca", "Frostbite Leviathan", "Fluorivane", "Cerulean Dragon","Crystalline Behemoth",
 }
 
 local MutasiList = {
     "Noob", "Fairy Dust", "Holographic", "Gemstone", "Fire", "Color Burn", "Frozen",
-    "Galaxy", "BloodMoon", "Binary", "Lightning", "Disco", "Festive", "Radioactive", "Moon Fragment", "Abyssal",
+    "Galaxy", "BloodMoon", "Binary", "Lightning", "Disco", "Festive", "Radioactive", "Moon Fragment",
 }
 
 local LegendaryCrystalList = {
@@ -394,11 +394,6 @@ local FishChanceData = {
     [""]                          = "1 in 3M",
     ["Elemental Tempestray"]      = "1 in 1M",
     ["Dark Megalodon"]            = "1 in 8M",
-    ["Caustic Maw"]               = "1 in 4M",
-    ["Coral Reaper"]              = "1 in ??",
-    ["Coral Reaper"]              = "1 in 5M",
-    ["Sunken Hadalith"]           = "1 in ??",
-    ["Trench Warden"]             = "1 in 15M",
     
 }
 
@@ -469,19 +464,18 @@ local FishImageURL = {
     ["Coral Whale"]              = NP .. "83.png",
     ["Love Nessie"]              = NP .. "85.png",
     ["Broken Heart Nessie"]      = NP .. "86.png",
-    ["Caustic Maw"]              = NP .. "97.png",
-    -- asset-id repo (ikan yang belum ada di new-pisit-image)
     ["Ketupat Whale"]            = AI .. "Ketupat%20Whale.png",
     ["Leviathan"]                = AI .. "Leviathan.png",
     ["Rainbow Comet Shark"]      = AI .. "Rainbow%20Comet%20Shark.png",
-    -- pisit-image repo
     ["Ruby"]                     = PI .. "1.png",
-    ["Machodon"]                 = PI .. "42.png",
-    -- misc
     ["Glacial Serpent"]          = AI .. "SC%20baru.png",
+    ["Machodon"]                 = PI .. "42.png",
     ["Crystal"]                  = NP .. "crystal.png",
     ["treasure hunt"]            = NP .. "treasure.png",
+    ["Caustic Maw"]              = NP .. "97.png",
     ["Aurora"]                   = NP .. "99.png",
+    ["Coral Reaper"]             = NP .. "Coral%20Reaper.png",
+    ["Trench Warden"]            = NP .. "Trench%20Warden.png",
 }
 
 -- ============================================================
@@ -1734,154 +1728,230 @@ local function CreateUI()
     local gui = Instance.new("ScreenGui")
     gui.Name         = "BloxGankUI"
     gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     gui.Parent       = (gethui and gethui()) or CoreGui
 
+    -- ── Helpers ────────────────────────────────────────────────
+    local function rgb(r,g,b) return Color3.fromRGB(r,g,b) end
+    local function corner(p,r) Instance.new("UICorner",p).CornerRadius = UDim.new(0,r) end
+    local function stroke(p,c,t) local s=Instance.new("UIStroke",p); s.Color=c; s.Thickness=t; return s end
+    local function pad(p,l,r,t,b)
+        local u=Instance.new("UIPadding",p)
+        u.PaddingLeft=UDim.new(0,l); u.PaddingRight=UDim.new(0,r)
+        u.PaddingTop=UDim.new(0,t);  u.PaddingBottom=UDim.new(0,b)
+    end
+    local function grad(p,c0,c1,r)
+        local g=Instance.new("UIGradient",p)
+        g.Color=ColorSequence.new{ColorSequenceKeypoint.new(0,c0),ColorSequenceKeypoint.new(1,c1)}
+        g.Rotation=r or 90
+    end
+
+    -- Palette
+    local C = {
+        bg       = rgb(8,12,18),
+        panel    = rgb(13,20,30),
+        surface  = rgb(18,28,42),
+        border   = rgb(30,50,70),
+        accent   = rgb(0,200,180),
+        accentDim= rgb(0,140,120),
+        green    = rgb(0,210,110),
+        red      = rgb(220,60,60),
+        amber    = rgb(220,160,0),
+        blue     = rgb(60,130,220),
+        text     = rgb(220,235,245),
+        subtext  = rgb(120,155,180),
+        dim      = rgb(70,100,130),
+        input    = rgb(12,22,35),
+    }
+
+    -- ── Shadow (outer glow) ────────────────────────────────────
+    local shadow = Instance.new("Frame")
+    shadow.Size              = UDim2.new(0, 336, 0, 472)
+    shadow.Position          = UDim2.new(0.5, -168, 0.5, -236)
+    shadow.BackgroundColor3  = rgb(0,180,160)
+    shadow.BackgroundTransparency = 0.88
+    shadow.BorderSizePixel   = 0
+    shadow.ZIndex            = 0
+    shadow.Parent            = gui
+    corner(shadow, 14)
+
+    -- ── Main frame ─────────────────────────────────────────────
     local frame = Instance.new("Frame")
     frame.Name              = "Main"
-    frame.Size              = UDim2.new(0, 310, 0, 440)
-    frame.Position          = UDim2.new(0.5, -155, 0.5, -220)
-    frame.BackgroundColor3  = Color3.fromRGB(20, 20, 20)
+    frame.Size              = UDim2.new(0, 330, 0, 462)
+    frame.Position          = UDim2.new(0.5, -165, 0.5, -231)
+    frame.BackgroundColor3  = C.bg
     frame.BorderSizePixel   = 0
+    frame.ZIndex            = 1
     frame.Parent            = gui
-    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 8)
+    corner(frame, 12)
+    stroke(frame, C.border, 1)
 
-    local stroke = Instance.new("UIStroke")
-    stroke.Color     = Color3.fromRGB(50, 50, 50)
-    stroke.Thickness = 1
-    stroke.Parent    = frame
+    -- subtle top accent line
+    local accentLine = Instance.new("Frame")
+    accentLine.Size             = UDim2.new(0.6, 0, 0, 2)
+    accentLine.Position         = UDim2.new(0.2, 0, 0, 0)
+    accentLine.BackgroundColor3 = C.accent
+    accentLine.BorderSizePixel  = 0
+    accentLine.ZIndex           = 2
+    accentLine.Parent           = frame
+    corner(accentLine, 2)
+    grad(accentLine, rgb(0,0,0), C.accent, 0)
 
-    -- Top bar
+    -- ── Top bar ────────────────────────────────────────────────
     local topBar = Instance.new("Frame")
-    topBar.Size             = UDim2.new(1, 0, 0, 36)
-    topBar.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    topBar.Size             = UDim2.new(1, 0, 0, 42)
+    topBar.BackgroundColor3 = C.panel
     topBar.BorderSizePixel  = 0
+    topBar.ZIndex           = 2
     topBar.Parent           = frame
-    Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 8)
+    corner(topBar, 12)
 
     local topBarFix = Instance.new("Frame")
-    topBarFix.Size             = UDim2.new(1, 0, 0, 8)
-    topBarFix.Position         = UDim2.new(0, 0, 1, -8)
-    topBarFix.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    topBarFix.Size             = UDim2.new(1, 0, 0, 12)
+    topBarFix.Position         = UDim2.new(0, 0, 1, -12)
+    topBarFix.BackgroundColor3 = C.panel
     topBarFix.BorderSizePixel  = 0
+    topBarFix.ZIndex           = 2
     topBarFix.Parent           = topBar
 
+    -- logo dot
+    local logoDot = Instance.new("Frame")
+    logoDot.Size             = UDim2.new(0, 8, 0, 8)
+    logoDot.Position         = UDim2.new(0, 14, 0.5, -4)
+    logoDot.BackgroundColor3 = C.accent
+    logoDot.BorderSizePixel  = 0
+    logoDot.ZIndex           = 3
+    logoDot.Parent           = topBar
+    corner(logoDot, 99)
+
     local title = Instance.new("TextLabel")
-    title.Text                   = "🎣 Forky Monitor — Galatama"
-    title.Size                   = UDim2.new(1, -80, 1, 0)
-    title.Position               = UDim2.new(0, 10, 0, 0)
+    title.Text                   = "ForkyHUB  ·  Galatama Monitor"
+    title.Size                   = UDim2.new(1, -100, 1, 0)
+    title.Position               = UDim2.new(0, 28, 0, 0)
     title.BackgroundTransparency = 1
-    title.TextColor3             = Color3.fromRGB(255, 255, 255)
+    title.TextColor3             = C.text
     title.Font                   = Enum.Font.GothamBold
-    title.TextSize               = 12
+    title.TextSize               = 11
     title.TextXAlignment         = Enum.TextXAlignment.Left
+    title.ZIndex                 = 3
     title.Parent                 = topBar
 
-    local function MakeWinBtn(text, xOffset, bgColor)
-        local btn = Instance.new("TextButton")
-        btn.Text             = text
-        btn.Size             = UDim2.new(0, 28, 0, 22)
-        btn.Position         = UDim2.new(1, xOffset, 0.5, -11)
-        btn.BackgroundColor3 = bgColor
-        btn.TextColor3       = Color3.fromRGB(255, 255, 255)
-        btn.Font             = Enum.Font.GothamBold
-        btn.TextSize         = 12
-        btn.BorderSizePixel  = 0
-        btn.Parent           = topBar
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-        return btn
+    local function MakeWinBtn(sym, xOff, bg, hov)
+        local b = Instance.new("TextButton")
+        b.Text             = sym
+        b.Size             = UDim2.new(0, 26, 0, 20)
+        b.Position         = UDim2.new(1, xOff, 0.5, -10)
+        b.BackgroundColor3 = bg
+        b.TextColor3       = C.text
+        b.Font             = Enum.Font.GothamBold
+        b.TextSize         = 11
+        b.BorderSizePixel  = 0
+        b.ZIndex           = 3
+        b.Parent           = topBar
+        corner(b, 5)
+        b.MouseEnter:Connect(function() TweenService:Create(b,TweenInfo.new(0.12),{BackgroundColor3=hov}):Play() end)
+        b.MouseLeave:Connect(function() TweenService:Create(b,TweenInfo.new(0.12),{BackgroundColor3=bg}):Play() end)
+        return b
     end
 
-    local minBtn   = MakeWinBtn("—", -58, Color3.fromRGB(60, 60, 60))
-    local closeBtn = MakeWinBtn("✕", -28, Color3.fromRGB(200, 50, 50))
+    local minBtn   = MakeWinBtn("—", -60, rgb(28,42,58), rgb(45,65,85))
+    local closeBtn = MakeWinBtn("✕", -30, rgb(28,42,58), rgb(200,55,55))
 
     local isMinimized = false
-    local fullSize    = UDim2.new(0, 310, 0, 440)
-    local miniSize    = UDim2.new(0, 310, 0, 36)
-
-    local function HoverTween(btn, hoverColor, baseColor)
-        btn.MouseEnter:Connect(function() TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = hoverColor}):Play() end)
-        btn.MouseLeave:Connect(function() TweenService:Create(btn, TweenInfo.new(0.1), {BackgroundColor3 = baseColor}):Play()  end)
-    end
+    local fullSize    = UDim2.new(0, 330, 0, 462)
+    local miniSize    = UDim2.new(0, 330, 0, 42)
 
     minBtn.MouseButton1Click:Connect(function()
         isMinimized = not isMinimized
-        TweenService:Create(frame, TweenInfo.new(0.2), {
+        TweenService:Create(frame, TweenInfo.new(0.22, Enum.EasingStyle.Quart), {
             Size = isMinimized and miniSize or fullSize
+        }):Play()
+        TweenService:Create(shadow, TweenInfo.new(0.22, Enum.EasingStyle.Quart), {
+            Size = isMinimized and UDim2.new(0,336,0,52) or UDim2.new(0,336,0,472)
         }):Play()
         minBtn.Text = isMinimized and "□" or "—"
     end)
 
     closeBtn.MouseButton1Click:Connect(function()
-        TweenService:Create(frame, TweenInfo.new(0.15), {
-            Size = UDim2.new(0, 310, 0, 0), BackgroundTransparency = 1
-        }):Play()
+        TweenService:Create(frame, TweenInfo.new(0.18), {Size=UDim2.new(0,330,0,0), BackgroundTransparency=1}):Play()
+        TweenService:Create(shadow, TweenInfo.new(0.18), {BackgroundTransparency=1}):Play()
         task.wait(0.2); gui:Destroy()
     end)
-
-    HoverTween(minBtn,   Color3.fromRGB(80, 80, 80),  Color3.fromRGB(60, 60, 60))
-    HoverTween(closeBtn, Color3.fromRGB(230, 70, 70), Color3.fromRGB(200, 50, 50))
 
     -- Drag
     local dragging, dragStart, startPos
     topBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging  = true
-            dragStart = input.Position
-            startPos  = frame.Position
+            dragging=true; dragStart=input.Position; startPos=frame.Position
         end
     end)
     topBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging=false end
     end)
     game:GetService("UserInputService").InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            local d = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset+d.X, startPos.Y.Scale, startPos.Y.Offset+d.Y)
+            shadow.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset+d.X-3, startPos.Y.Scale, startPos.Y.Offset+d.Y-3)
         end
     end)
 
-    -- Status dot & label
+    -- ── Status pill ────────────────────────────────────────────
+    local statusPill = Instance.new("Frame")
+    statusPill.Size             = UDim2.new(1, -24, 0, 30)
+    statusPill.Position         = UDim2.new(0, 12, 0, 50)
+    statusPill.BackgroundColor3 = C.surface
+    statusPill.BorderSizePixel  = 0
+    statusPill.ZIndex           = 2
+    statusPill.Parent           = frame
+    corner(statusPill, 8)
+    stroke(statusPill, C.border, 1)
+
     local statusDot = Instance.new("Frame")
-    statusDot.Size             = UDim2.new(0, 8, 0, 8)
-    statusDot.Position         = UDim2.new(0, 16, 0, 46)
-    statusDot.BackgroundColor3 = Color3.fromRGB(255, 60, 60)
+    statusDot.Size             = UDim2.new(0, 7, 0, 7)
+    statusDot.Position         = UDim2.new(0, 12, 0.5, -3)
+    statusDot.BackgroundColor3 = C.red
     statusDot.BorderSizePixel  = 0
-    statusDot.Parent           = frame
-    Instance.new("UICorner", statusDot).CornerRadius = UDim.new(1, 0)
+    statusDot.ZIndex           = 3
+    statusDot.Parent           = statusPill
+    corner(statusDot, 99)
 
     local statusLabel = Instance.new("TextLabel")
     statusLabel.Text                   = "Tidak Aktif"
-    statusLabel.Size                   = UDim2.new(1, -40, 0, 20)
-    statusLabel.Position               = UDim2.new(0, 30, 0, 38)
+    statusLabel.Size                   = UDim2.new(1, -30, 1, 0)
+    statusLabel.Position               = UDim2.new(0, 26, 0, 0)
     statusLabel.BackgroundTransparency = 1
-    statusLabel.TextColor3             = Color3.fromRGB(180, 180, 180)
+    statusLabel.TextColor3             = C.subtext
     statusLabel.Font                   = Enum.Font.Gotham
-    statusLabel.TextSize               = 11
+    statusLabel.TextSize               = 10
     statusLabel.TextXAlignment         = Enum.TextXAlignment.Left
-    statusLabel.Parent                 = frame
+    statusLabel.ZIndex                 = 3
+    statusLabel.Parent                 = statusPill
 
-    local function MakeLabel(text, yPos)
+    -- ── Input helper ───────────────────────────────────────────
+    local function MakeSection(labelText, yPos)
         local lbl = Instance.new("TextLabel")
-        lbl.Text                   = text
-        lbl.Size                   = UDim2.new(1, -24, 0, 14)
+        lbl.Text                   = labelText
+        lbl.Size                   = UDim2.new(1, -24, 0, 13)
         lbl.Position               = UDim2.new(0, 12, 0, yPos)
         lbl.BackgroundTransparency = 1
-        lbl.TextColor3             = Color3.fromRGB(130, 130, 130)
-        lbl.Font                   = Enum.Font.Gotham
-        lbl.TextSize               = 10
+        lbl.TextColor3             = C.dim
+        lbl.Font                   = Enum.Font.GothamBold
+        lbl.TextSize               = 9
         lbl.TextXAlignment         = Enum.TextXAlignment.Left
+        lbl.ZIndex                 = 2
         lbl.Parent                 = frame
-        return lbl
     end
 
     local function MakeInput(placeholder, yPos)
         local box = Instance.new("TextBox")
         box.PlaceholderText   = placeholder
-        box.Size              = UDim2.new(1, -24, 0, 28)
+        box.Size              = UDim2.new(1, -24, 0, 30)
         box.Position          = UDim2.new(0, 12, 0, yPos)
-        box.BackgroundColor3  = Color3.fromRGB(35, 35, 35)
-        box.TextColor3        = Color3.fromRGB(220, 220, 220)
-        box.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+        box.BackgroundColor3  = C.input
+        box.TextColor3        = C.text
+        box.PlaceholderColor3 = C.dim
         box.Font              = Enum.Font.Gotham
         box.TextSize          = 10
         box.ClearTextOnFocus  = false
@@ -1889,112 +1959,157 @@ local function CreateUI()
         box.Text              = ""
         box.TextXAlignment    = Enum.TextXAlignment.Left
         box.ClipsDescendants  = true
+        box.ZIndex            = 2
         box.Parent            = frame
-        Instance.new("UICorner", box).CornerRadius = UDim.new(0, 6)
-        local pad = Instance.new("UIPadding", box)
-        pad.PaddingLeft  = UDim.new(0, 8)
-        pad.PaddingRight = UDim.new(0, 8)
+        corner(box, 7)
+        stroke(box, C.border, 1)
+        pad(box, 10, 10, 0, 0)
+        -- focus glow
+        box.Focused:Connect(function()
+            TweenService:Create(box,TweenInfo.new(0.15),{BackgroundColor3=rgb(16,30,46)}):Play()
+        end)
+        box.FocusLost:Connect(function()
+            TweenService:Create(box,TweenInfo.new(0.15),{BackgroundColor3=C.input}):Play()
+        end)
         return box
     end
 
-    local function MakeButton(text, yPos, w, xPos, bg)
-        local btn = Instance.new("TextButton")
-        btn.Text             = text
-        btn.Size             = w or UDim2.new(1, -24, 0, 32)
-        btn.Position         = xPos or UDim2.new(0, 12, 0, yPos)
-        btn.BackgroundColor3 = bg or Color3.fromRGB(0, 180, 100)
-        btn.TextColor3       = Color3.fromRGB(255, 255, 255)
-        btn.Font             = Enum.Font.GothamBold
-        btn.TextSize         = 11
-        btn.BorderSizePixel  = 0
-        btn.Parent           = frame
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-        return btn
+    local function MakeBtn(text, yPos, sz, xp, bg, hov)
+        local b = Instance.new("TextButton")
+        b.Text             = text
+        b.Size             = sz  or UDim2.new(1,-24,0,34)
+        b.Position         = xp  or UDim2.new(0,12,0,yPos)
+        b.BackgroundColor3 = bg  or C.green
+        b.TextColor3       = rgb(240,255,250)
+        b.Font             = Enum.Font.GothamBold
+        b.TextSize         = 11
+        b.BorderSizePixel  = 0
+        b.ZIndex           = 2
+        b.Parent           = frame
+        corner(b, 8)
+        local hc = hov or rgb(
+            math.min(bg.R*255+20,255),
+            math.min(bg.G*255+20,255),
+            math.min(bg.B*255+20,255)
+        )
+        b.MouseEnter:Connect(function() TweenService:Create(b,TweenInfo.new(0.12),{BackgroundColor3=hc}):Play() end)
+        b.MouseLeave:Connect(function() TweenService:Create(b,TweenInfo.new(0.12),{BackgroundColor3=bg}):Play() end)
+        return b
     end
 
-    -- Inputs
-    MakeLabel("✅ Webhook dari script (sudah diset)", 62)
-    local infoBox = Instance.new("TextLabel")
-    infoBox.Text                   = "Webhook utama sudah terpasang di dalam skrip."
-    infoBox.Size                   = UDim2.new(1, -24, 0, 28)
-    infoBox.Position               = UDim2.new(0, 12, 0, 76)
-    infoBox.BackgroundTransparency = 1
-    infoBox.TextColor3             = Color3.fromRGB(160, 160, 160)
-    infoBox.Font                   = Enum.Font.Gotham
-    infoBox.TextSize               = 10
-    infoBox.TextWrapped            = true
-    infoBox.TextXAlignment         = Enum.TextXAlignment.Left
-    infoBox.Parent                 = frame
+    -- ── Divider ────────────────────────────────────────────────
+    local function MakeDivider(yPos)
+        local d = Instance.new("Frame")
+        d.Size             = UDim2.new(1,-24,0,1)
+        d.Position         = UDim2.new(0,12,0,yPos)
+        d.BackgroundColor3 = C.border
+        d.BorderSizePixel  = 0
+        d.ZIndex           = 2
+        d.Parent           = frame
+    end
 
-    MakeLabel("🏅 Webhook Galatama (opsional)", 110)
-    local inputGalatama = MakeInput("Paste webhook khusus Galatama...", 124)
+    -- ── Info row ───────────────────────────────────────────────
+    local infoRow = Instance.new("Frame")
+    infoRow.Size             = UDim2.new(1,-24,0,28)
+    infoRow.Position         = UDim2.new(0,12,0,89)
+    infoRow.BackgroundColor3 = rgb(10,30,20)
+    infoRow.BorderSizePixel  = 0
+    infoRow.ZIndex           = 2
+    infoRow.Parent           = frame
+    corner(infoRow, 7)
+    stroke(infoRow, rgb(0,80,50), 1)
+    local infoLbl = Instance.new("TextLabel", infoRow)
+    infoLbl.Text                   = "✅  Webhook utama sudah terpasang di dalam skrip."
+    infoLbl.Size                   = UDim2.new(1,-10,1,0)
+    infoLbl.Position               = UDim2.new(0,8,0,0)
+    infoLbl.BackgroundTransparency = 1
+    infoLbl.TextColor3             = rgb(80,210,140)
+    infoLbl.Font                   = Enum.Font.Gotham
+    infoLbl.TextSize               = 9
+    infoLbl.TextXAlignment         = Enum.TextXAlignment.Left
+    infoLbl.TextWrapped            = true
+    infoLbl.ZIndex                 = 3
 
-    MakeLabel("🤖 Bot Token (untuk restore point)", 160)
-    local inputToken = MakeInput("Paste Bot Token...", 174)
+    -- ── Inputs ─────────────────────────────────────────────────
+    MakeSection("WEBHOOK GALATAMA  (opsional)", 125)
+    local inputGalatama = MakeInput("https://discord.com/api/webhooks/...", 139)
 
-    MakeLabel("📌 Channel ID Galatama (save/restore)", 208)
-    local inputChannel = MakeInput("Paste Channel ID...", 222)
+    MakeSection("BOT TOKEN  (untuk restore point)", 178)
+    local inputToken = MakeInput("Bot token...", 192)
 
-    MakeLabel("🔔 Discord Role ID (opsional)", 256)
-    local inputRole = MakeInput("Masukkan Role ID...", 270)
+    MakeSection("CHANNEL ID GALATAMA", 230)
+    local inputChannel = MakeInput("ID channel Discord...", 244)
 
-    -- START button
-    local startBtn = MakeButton("START MONITORING", 308, nil, nil, Color3.fromRGB(0, 180, 100))
-    HoverTween(startBtn, Color3.fromRGB(0, 210, 120), Color3.fromRGB(0, 180, 100))
+    MakeSection("DISCORD ROLE ID  (opsional)", 282)
+    local inputRole = MakeInput("Role ID...", 296)
 
-    -- Post-start buttons (awalnya hidden)
-    local editBtn = MakeButton(
-        "✏️ EDIT WEBHOOK",
-        352,
-        UDim2.new(0.5, -14, 0, 28),
-        UDim2.new(0, 12, 0, 352),
-        Color3.fromRGB(60, 100, 180)
+    MakeDivider(336)
+
+    -- ── START button ───────────────────────────────────────────
+    local startBtn = MakeBtn(
+        "▶   START MONITORING",
+        344, nil, nil,
+        rgb(0,155,90), rgb(0,185,110)
     )
-    editBtn.TextSize = 10
-    editBtn.Visible  = false
-    HoverTween(editBtn, Color3.fromRGB(80, 130, 210), Color3.fromRGB(60, 100, 180))
 
-    local galaBtn = MakeButton(
-        "🏅 LB GALATAMA",
-        352,
-        UDim2.new(0.5, -14, 0, 28),
-        UDim2.new(0.5, 2, 0, 352),
-        Color3.fromRGB(160, 100, 0)
+    -- ── Post-start buttons ─────────────────────────────────────
+    local editBtn = MakeBtn(
+        "✏️  EDIT",
+        386,
+        UDim2.new(0.33,-8,0,28),
+        UDim2.new(0,12,0,386),
+        rgb(40,80,170), rgb(60,110,210)
     )
-    galaBtn.TextSize = 10
-    galaBtn.Visible  = false
-    HoverTween(galaBtn, Color3.fromRGB(200, 130, 0), Color3.fromRGB(160, 100, 0))
+    editBtn.TextSize = 10; editBtn.Visible = false
 
-    local lbBtn = MakeButton(
-        "📊 LB SECRET",
-        388,
-        UDim2.new(1, -24, 0, 28),
-        UDim2.new(0, 12, 0, 388),
-        Color3.fromRGB(50, 120, 60)
+    local galaBtn = MakeBtn(
+        "🏅  GALATAMA",
+        386,
+        UDim2.new(0.34,-4,0,28),
+        UDim2.new(0.33,4,0,386),
+        rgb(140,90,0), rgb(185,120,0)
     )
-    lbBtn.TextSize = 10
-    lbBtn.Visible  = false
-    HoverTween(lbBtn, Color3.fromRGB(70, 160, 80), Color3.fromRGB(50, 120, 60))
+    galaBtn.TextSize = 10; galaBtn.Visible = false
 
-    -- Galatama LB button
+    local lbBtn = MakeBtn(
+        "📊  LB SECRET",
+        386,
+        UDim2.new(0.33,-8,0,28),
+        UDim2.new(0.67,4,0,386),
+        rgb(40,110,55), rgb(55,150,75)
+    )
+    lbBtn.TextSize = 10; lbBtn.Visible = false
+
+    -- ── Version tag ────────────────────────────────────────────
+    local verLbl = Instance.new("TextLabel")
+    verLbl.Text                   = "ForkyHUB v2  ·  GTT Edition"
+    verLbl.Size                   = UDim2.new(1,-24,0,14)
+    verLbl.Position               = UDim2.new(0,12,1,-18)
+    verLbl.BackgroundTransparency = 1
+    verLbl.TextColor3             = C.dim
+    verLbl.Font                   = Enum.Font.Gotham
+    verLbl.TextSize               = 8
+    verLbl.TextXAlignment         = Enum.TextXAlignment.Center
+    verLbl.ZIndex                 = 2
+    verLbl.Parent                 = frame
+
+    -- ── Logic (sama persis dengan sebelumnya) ──────────────────
     galaBtn.MouseButton1Click:Connect(function()
         if not SCRIPT_ACTIVE then return end
         galaBtn.Text = "⏳ Mengirim..."
         SendGalatamaLeaderboard(false)
         task.wait(2)
-        galaBtn.Text = "🏅 LB GALATAMA"
+        galaBtn.Text = "🏅  GALATAMA"
     end)
 
-    -- Secret LB button
     lbBtn.MouseButton1Click:Connect(function()
         if not SCRIPT_ACTIVE then return end
         lbBtn.Text = "⏳ Mengirim..."
         SendLeaderboard(false)
         task.wait(2)
-        lbBtn.Text = "📊 LB SECRET"
+        lbBtn.Text = "📊  LB SECRET"
     end)
 
-    -- Edit webhook toggle
     local isEditing = false
     local allInputs = { inputGalatama, inputToken, inputChannel, inputRole }
 
@@ -2004,10 +2119,10 @@ local function CreateUI()
         if isEditing then
             for _, box in ipairs(allInputs) do
                 box.TextEditable     = true
-                box.BackgroundColor3 = Color3.fromRGB(50, 50, 30)
+                box.BackgroundColor3 = rgb(22,32,16)
             end
             editBtn.Text             = "💾 SIMPAN"
-            editBtn.BackgroundColor3 = Color3.fromRGB(180, 140, 0)
+            editBtn.BackgroundColor3 = rgb(160,120,0)
         else
             if inputGalatama.Text ~= "" and inputGalatama.Text:find("discord.com/api/webhooks") then
                 WEBHOOK_GALATAMA = inputGalatama.Text
@@ -2017,10 +2132,10 @@ local function CreateUI()
             if inputRole.Text    ~= "" then DISCORD_ROLE_ID = inputRole.Text    end
             for _, box in ipairs(allInputs) do
                 box.TextEditable     = false
-                box.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                box.BackgroundColor3 = C.input
             end
-            editBtn.Text             = "✏️ EDIT WEBHOOK"
-            editBtn.BackgroundColor3 = Color3.fromRGB(60, 100, 180)
+            editBtn.Text             = "✏️  EDIT"
+            editBtn.BackgroundColor3 = rgb(40,80,170)
             PostWebhook(WEBHOOK_URL ~= "" and WEBHOOK_URL or WEBHOOK_STATS, {
                 username   = WH_IDENTITY.stats.name,
                 avatar_url = WH_IDENTITY.stats.avatar,
@@ -2037,10 +2152,10 @@ local function CreateUI()
 
         if not WEBHOOK_URL or not WEBHOOK_URL:find("discord.com/api/webhooks") then
             startBtn.Text             = "❌ WEBHOOK SCRIPT INVALID!"
-            startBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+            startBtn.BackgroundColor3 = C.red
             task.wait(2)
-            startBtn.Text             = "START MONITORING"
-            startBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 100)
+            startBtn.Text             = "▶   START MONITORING"
+            startBtn.BackgroundColor3 = rgb(0,155,90)
             return
         end
 
@@ -2052,11 +2167,24 @@ local function CreateUI()
         if inputRole.Text    ~= "" then DISCORD_ROLE_ID = inputRole.Text    end
 
         SCRIPT_ACTIVE = true
-        statusDot.BackgroundColor3  = Color3.fromRGB(0, 220, 100)
-        statusLabel.Text            = "Aktif — Monitoring Galatama..."
-        statusLabel.TextColor3      = Color3.fromRGB(0, 220, 100)
-        startBtn.Text               = "✅ MONITORING AKTIF"
-        startBtn.BackgroundColor3   = Color3.fromRGB(30, 30, 30)
+
+        -- animate status
+        TweenService:Create(statusDot, TweenInfo.new(0.3), {BackgroundColor3=C.green}):Play()
+        TweenService:Create(statusLabel, TweenInfo.new(0.3), {TextColor3=C.green}):Play()
+        statusLabel.Text             = "Aktif — Monitoring berjalan..."
+        startBtn.Text                = "✅  MONITORING AKTIF"
+        startBtn.BackgroundColor3    = rgb(20,35,25)
+        startBtn.TextColor3          = C.dim
+
+        -- pulse accent line
+        task.spawn(function()
+            while SCRIPT_ACTIVE do
+                TweenService:Create(accentLine,TweenInfo.new(1.2,Enum.EasingStyle.Sine),{BackgroundTransparency=0.4}):Play()
+                task.wait(1.2)
+                TweenService:Create(accentLine,TweenInfo.new(1.2,Enum.EasingStyle.Sine),{BackgroundTransparency=0}):Play()
+                task.wait(1.2)
+            end
+        end)
 
         for _, box in ipairs(allInputs) do box.TextEditable = false end
         editBtn.Visible = true
