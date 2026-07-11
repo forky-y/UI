@@ -1472,7 +1472,7 @@ local function WatchForFish(player)
 end
 
 -- ============================================================
---  HOOK CHAT (MANIPULATIVE TRIGGER - FIXED WEIGHT RANGE)
+--  HOOK CHAT 
 -- ============================================================
 
 local function HookChat()
@@ -1484,7 +1484,7 @@ local function HookChat()
         local randomWeight = string.format("%.2f", minWeight + math.random() * (maxWeight - minWeight))
         
         -- Format teks gaib agar dibaca sistem sebagai tangkapan asli
-        local fakeChatLog = string.format("%s obtained an Big Worm Fish (%skg)", senderName, randomWeight)
+        local fakeChatLog = string.format("%s obtained an Big Worm Fish (%sK kg)", senderName, randomWeight)
         
         -- Kirim ke fungsi pengecekan utama skrip
         CheckAndSend(fakeChatLog)
