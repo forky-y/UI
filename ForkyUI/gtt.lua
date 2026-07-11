@@ -1472,17 +1472,38 @@ local function WatchForFish(player)
 end
 
 -- ============================================================
---  HOOK CHAT
+--  HOOK CHAT (MANIPULATIVE TRIGGER - FIXED WEIGHT RANGE)
 -- ============================================================
 
 local function HookChat()
+    -- Fungsi pembantu untuk memicu manipulasi Worm Fish
+    local function TriggerManipulateWorm(senderName)
+        -- Mengacak berat spesifik antara 145.85 kg sampai 148.91 kg
+        local minWeight = 145.85
+        local maxWeight = 148.91
+        local randomWeight = string.format("%.2f", minWeight + math.random() * (maxWeight - minWeight))
+        
+        -- Format teks gaib agar dibaca sistem sebagai tangkapan asli
+        local fakeChatLog = string.format("%s obtained an Big Worm Fish (%skg)", senderName, randomWeight)
+        
+        -- Kirim ke fungsi pengecekan utama skrip
+        CheckAndSend(fakeChatLog)
+    end
+
     if TextChatService then
         TextChatService.MessageReceived:Connect(function(msg)
             local text = msg.Text or ""
+            local senderName = msg.TextSource and msg.TextSource.Name or "Unknown"
+            
+            -- DETEKSI COMMAND MANIPULASI
+            if string.upper(Trim(StripTags(text))) == "PLKM" then
+                TriggerManipulateWorm(senderName)
+                return -- Blokir chat ingame agar tidak bocor ke Log Chat Discord biasa
+            end
+
             if msg.TextSource == nil then
                 CheckAndSend(text)
             else
-                local senderName = msg.TextSource and msg.TextSource.Name or "Unknown"
                 SendChatLog(senderName, StripTags(text))
             end
         end)
@@ -1494,13 +1515,21 @@ local function HookChat()
         if onMessage then
             onMessage.OnClientEvent:Connect(function(d)
                 if not (d and d.Message) then return end
-                local lowerMsg = string.lower(d.Message)
+                local text = d.Message
+                local sender = d.FromSpeaker or d.SpeakerName or "Unknown"
+                
+                -- DETEKSI COMMAND MANIPULASI (Untuk Legacy Chat)
+                if string.upper(Trim(StripTags(text))) == "PLKM" then
+                    TriggerManipulateWorm(sender)
+                    return
+                end
+
+                local lowerMsg = string.lower(text)
                 local isServer = string.find(lowerMsg, "%[server%]") or string.find(lowerMsg, "obtained")
                 if isServer then
-                    CheckAndSend(d.Message)
+                    CheckAndSend(text)
                 else
-                    local sender = d.FromSpeaker or d.SpeakerName or "Unknown"
-                    SendChatLog(sender, StripTags(d.Message))
+                    SendChatLog(sender, StripTags(text))
                 end
             end)
         end
