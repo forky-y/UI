@@ -9,6 +9,7 @@ local TextChatService    = game:GetService("TextChatService")
 local ReplicatedStorage  = game:GetService("ReplicatedStorage")
 local CoreGui            = game:GetService("CoreGui")
 local TweenService       = game:GetService("TweenService")
+local Workspace          = game:GetService("Workspace")
 
 -- ============================================================
 --  CONFIGURATION
@@ -299,15 +300,38 @@ local SecretFishList = {
     "Sea Eater", "Thunderzilla", "Iridesca", "Frostbite Leviathan", "Fluorivane",
     "Cerulean Dragon", "Machodon", "Scorching Veinmaw", "Crystalline Behemoth",
     "Frostmoon Whale", "Crystal Goliath", "Eggy Enchant Stone", "Dark Megalodon", "Elemental Tempestray",
+    -- FIX (dari BLOX Gank): fish list disamakan ke versi lebih baru
+    "Glacial Serpent", "Caustic Maw", "Coral Reaper", "Sunken Hadalith", "Trench Warden",
+    "Caeruleum Razerback", "Two-headed shark", "Ragnarex", "Colossal Shipwreck Crab",
+    "Astrelle", "Moonwake Ray", "Astralune", "Starglass Guardian", "Pelagon",
+    "Crimson Dreadtusk", "Riftborn Arowana",
 }
 
 local ForgottenList = {
     "Sea Eater", "Thunderzilla", "Iridesca", "Frostbite Leviathan", "Fluorivane", "Cerulean Dragon","Crystalline Behemoth",
+    -- FIX (dari BLOX Gank): forgotten tier terbaru
+    "Trench Warden", "Ragnarex", "Astralune", "Crimson Dreadtusk",
 }
 
 local MutasiList = {
     "Noob", "Fairy Dust", "Holographic", "Gemstone", "Fire", "Color Burn", "Frozen",
     "Galaxy", "BloodMoon", "Binary", "Lightning", "Disco", "Festive", "Radioactive", "Moon Fragment",
+    -- FIX (dari BLOX Gank): mutasi terbaru
+    "Abyssal", "Cosmic", "Equinox", "Glitch", "Aurora", "Midnight",
+}
+
+-- FIX (dari BLOX Gank): nama SPESIES ikan yang kebetulan diawali kata yang sama kayak nama
+-- mutasi beneran (Abyssal Maw Angler, Aurora Grouper, dst). FindMutasi akan membuang dulu
+-- substring nama spesies ini dari teks sebelum nyari kata mutasi, supaya kata mutasi yang
+-- nempel di nama spesies gak salah kedetect sebagai mutasi beneran.
+local MutasiFalsePositiveSpecies = {
+    "abyssal maw angler",
+    "aurora grouper",
+    "aurora starfish",
+    "aurora narwhal",
+    "aurora manatee",
+    "aurora buterfly fish",
+    "midnight star squid",
 }
 
 local LegendaryCrystalList = {
@@ -391,10 +415,25 @@ local FishChanceData = {
     ["Crystal Goliath"]           = "1 in 3M",
     ["Ketupat Whale"]             = "1 in ??",
     ["Scorching Veinmaw"]         = "1 in 5M",
-    [""]                          = "1 in 3M",
     ["Elemental Tempestray"]      = "1 in 1M",
     ["Dark Megalodon"]            = "1 in 8M",
-    
+    -- FIX (dari BLOX Gank): chance buat fish list terbaru
+    ["Glacial Serpent"]           = "1 in 6M",
+    ["Caustic Maw"]               = "1 in 4M",
+    ["Coral Reaper"]              = "1 in 6M",
+    ["Sunken Hadalith"]           = "1 in ??",
+    ["Trench Warden"]             = "1 in 15M",
+    ["Caeruleum Razerback"]       = "1 in 3M",
+    ["Two-headed shark"]          = "1 in 3M",
+    ["Ragnarex"]                  = "1 in 35M",
+    ["Colossal Shipwreck Crab"]   = "1 in 5M",
+    ["Astrelle"]                  = "1 in 6M",
+    ["Moonwake Ray"]              = "1 in 5M",
+    ["Astralune"]                 = "1 in 20M",
+    ["Starglass Guardian"]        = "1 in 3M",
+    ["Pelagon"]                   = "1 in 4.5M",
+    ["Riftborn Arowana"]          = "1 in 4.5M",
+    ["Crimson Dreadtusk"]         = "1 in 20M",
 }
 
 local NP = "https://raw.githubusercontent.com/revkatomy-max/new-pisit-image/main/"
@@ -476,7 +515,34 @@ local FishImageURL = {
     ["Aurora"]                   = NP .. "99.png",
     ["Coral Reaper"]             = NP .. "Coral%20Reaper.png",
     ["Trench Warden"]            = NP .. "Trench%20Warden.png",
+    -- FIX (dari BLOX Gank): gambar buat fish list terbaru
+    ["Caeruleum Razerback"]      = NP .. "cureleam%20barbak%20(1).png",
+    ["Two-headed shark"]         = NP .. "Two-headed%20shark.png",
+    ["Ragnarex"]                 = NP .. "104.png",
+    ["Colossal Shipwreck Crab"]  = NP .. "106.png",
+    -- NOTE: nama file "Astrlele.png" ini keliatan kayak typo (harusnya "Astrelle.png"?) --
+    -- cek lagi nama file yang beneran ke-upload di repo new-pisit-image kalau gambar gak muncul.
+    ["Astrelle"]                 = NP .. "Astrlele.png",
+    ["Astralune"]                = NP .. "1000188338.png",
+    ["Moonwake Ray"]             = NP .. "1000188340.png",
+    ["Pelagon"]                  = NP .. "1000192226%20(1).png",
+    ["Starglass Guardian"]       = NP .. "1000192227%20(1).png",
+    ["Riftborn Arowana"]         = NP .. "1000195428.png",
+    ["Crimson Dreadtusk"]        = NP .. "1000195427.png",
 }
+
+-- Helper case-insensitive buat ambil URL gambar ikan (dari BLOX Gank) -- nyegah bug lookup
+-- kayak "two-headed shark" kalau ada typo beda huruf besar/kecil antara SecretFishList/
+-- ForgottenList/dll dengan key di FishImageURL, gambar tetap ketemu selama nama dasarnya sama.
+local FishImageURLLower = {}
+for k, v in pairs(FishImageURL) do
+    FishImageURLLower[string.lower(k)] = v
+end
+
+local function GetFishImageURL(baseName)
+    if not baseName then return nil end
+    return FishImageURL[baseName] or FishImageURLLower[string.lower(baseName)]
+end
 
 -- ============================================================
 --  STATE / CACHE
@@ -505,6 +571,9 @@ local ServerStats = {
 local LeaderboardMsgRef = { nil }
 local StatsMsgRef       = { nil }
 local GalatamaMsgRef    = { nil }
+
+-- Lokasi player (dari BLOX Gank): cache spawn point buat fallback estimasi lokasi
+local SpawnPointCache = {} -- {name, position} hasil scan folder "!!! SPAWN LOCATIONS"
 
 -- ============================================================
 --  UTILITY
@@ -545,6 +614,155 @@ local function FindPlayer(name)
         end
     end
     return nil
+end
+
+-- ============================================================
+--  LOKASI PLAYER  (dari BLOX Gank)
+--  Game ini kadang gak nge-track lokasi player lewat stat, jadi
+--  kita hitung sendiri: cari SpawnLocation terdekat dari posisi
+--  HumanoidRootPart player. Kalau ada stat Map/Location/Zone,
+--  itu tetap diprioritaskan; spawn terdekat cuma fallback terakhir.
+-- ============================================================
+
+local SPAWN_FOLDER_NAME  = "!!! SPAWN LOCATIONS"
+local SPAWN_MAX_DISTANCE = 400 -- studs, di atas ini dianggap "Unknown Area"
+
+-- Cari child dengan nama tertentu di dalam sebuah container (leaderstats, dll).
+local function FindValueByName(container, names)
+    if not container then return nil end
+    for _, n in ipairs(names) do
+        local child = container:FindFirstChild(n)
+        if child then return child end
+    end
+    return nil
+end
+
+-- Cari ke SELURUH descendant instance (bukan cuma leaderstats) buat nama yang match,
+-- dipakai sebagai fallback kalau statnya ternyata gak ada di leaderstats.
+local function FindValueRecursive(instance, names)
+    if not instance then return nil end
+    local wanted = {}
+    for _, n in ipairs(names) do wanted[string.lower(n)] = true end
+    for _, desc in ipairs(instance:GetDescendants()) do
+        if wanted[string.lower(desc.Name)] then
+            local ok = pcall(function() return desc.Value end)
+            if ok then return desc end
+        end
+    end
+    return nil
+end
+
+-- Cari value Map/Location di dalam WORKSPACE, bukan cuma di dalam Player itu sendiri.
+-- Beberapa game nyimpen data per-player di folder terpisah di workspace
+-- (misal workspace.PlayerName.Map), bukan di leaderstats.
+local function FindPlayerValueInWorkspace(player, names)
+    if not player then return nil end
+
+    local playerFolder = Workspace:FindFirstChild(player.Name)
+    if playerFolder then
+        local direct = FindValueByName(playerFolder, names)
+        if direct then return direct end
+        local nested = FindValueRecursive(playerFolder, names)
+        if nested then return nested end
+    end
+
+    local lowerPlayerName = string.lower(player.Name)
+    local wanted = {}
+    for _, n in ipairs(names) do wanted[string.lower(n)] = true end
+
+    for _, desc in ipairs(Workspace:GetDescendants()) do
+        if wanted[string.lower(desc.Name)] then
+            local ok = pcall(function() return desc.Value end)
+            if ok then
+                local anc = desc.Parent
+                while anc and anc ~= Workspace do
+                    if string.lower(anc.Name) == lowerPlayerName then return desc end
+                    anc = anc.Parent
+                end
+            end
+        end
+    end
+
+    return nil
+end
+
+local function CacheSpawnLocations()
+    SpawnPointCache = {}
+    local folder = Workspace:FindFirstChild(SPAWN_FOLDER_NAME)
+    if not folder then
+        warn("[ Location ] Folder '" .. SPAWN_FOLDER_NAME .. "' tidak ditemukan di Workspace!")
+        return
+    end
+
+    for _, obj in ipairs(folder:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name:lower():find("spawn", 1, true) then
+            local lowerName = obj.Name:lower()
+            local areaName
+
+            if lowerName == "spawnlocation" or lowerName == "spawn" then
+                -- struktur aslinya "!!! SPAWN LOCATIONS" > "<Nama Area>" > "SpawnLocation"
+                areaName = obj.Parent and obj.Parent.Name or nil
+            else
+                areaName = obj.Name:gsub("%s*[Ss]pawn[Ll]ocation%s*$", "")
+            end
+
+            areaName = areaName and Trim(areaName) or nil
+            if areaName and areaName ~= "" then
+                table.insert(SpawnPointCache, { name = areaName, position = obj.Position })
+            end
+        end
+    end
+
+    warn("[ Location ] CacheSpawnLocations: ketemu " .. #SpawnPointCache .. " spawn point.")
+end
+
+-- Cari nama area terdekat dari posisi karakter player.
+local function GetNearestSpawnArea(player)
+    if #SpawnPointCache == 0 then return nil end
+    local char = player and player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return nil end
+
+    local charPos = root.Position
+    local nearestName, nearestDist = nil, math.huge
+
+    for _, sp in ipairs(SpawnPointCache) do
+        local dist = (charPos - sp.position).Magnitude
+        if dist < nearestDist then
+            nearestDist = dist
+            nearestName = sp.name
+        end
+    end
+
+    if nearestName and nearestDist <= SPAWN_MAX_DISTANCE then
+        return nearestName
+    end
+    return nil -- terlalu jauh dari spawn manapun, gak yakin lokasinya
+end
+
+-- Ambil lokasi player: leaderstats -> descendant player -> workspace -> attribute ->
+-- estimasi dari SpawnLocation terdekat (fallback terakhir).
+local function GetPlayerLocation(player)
+    if not player then return "N/A" end
+    local ls = player:FindFirstChild("leaderstats")
+
+    local locStat = FindValueByName(ls, { "Map", "map", "Location", "Zone" })
+        or FindValueRecursive(player, { "Map", "map", "Location", "Zone" })
+        or FindPlayerValueInWorkspace(player, { "Map", "map", "Location", "Zone" })
+    if locStat then
+        return tostring(locStat.Value)
+    end
+
+    local attrLoc = player:GetAttribute("Map") or player:GetAttribute("map")
+        or player:GetAttribute("Location") or player:GetAttribute("Zone")
+    if attrLoc ~= nil then
+        return tostring(attrLoc)
+    end
+
+    local nearest = GetNearestSpawnArea(player)
+    if nearest then return nearest .. " (est.)" end
+
+    return "N/A"
 end
 
 -- ============================================================
@@ -669,16 +887,37 @@ local function FindGalatamaFish(fishName)
     return bestBase
 end
 
+-- FIX (dari BLOX Gank): versi lama gagal detect kalau nama mutasi ada di UJUNG string
+-- (contoh "Dead Zombie Shark Frozen" -> "Frozen" di ujung, afterPos jadi string kosong
+-- sehingga "afterOk" dulu selalu false). Sekarang end-of-string dihitung valid juga.
+-- Selain itu, sebelum nyari kata mutasi, kita buang dulu substring nama SPESIES ikan yang
+-- kebetulan diawali kata mutasi (Abyssal Maw Angler, Aurora Grouper, dst) supaya kata itu
+-- gak salah kedetect sebagai mutasi beneran.
 local function FindMutasi(fishName)
     local lower = string.lower(fishName)
+
+    for _, species in ipairs(MutasiFalsePositiveSpecies) do
+        local s = string.find(lower, species, 1, true)
+        if s then
+            local beforeOk = (s == 1) or (lower:sub(s - 1, s - 1) == " ")
+            local afterPos = s + #species
+            local afterOk  = (afterPos > #lower) or (lower:sub(afterPos, afterPos) == " ")
+            if beforeOk and afterOk then
+                lower = Trim((lower:sub(1, s - 1) .. " " .. lower:sub(afterPos + 1)):gsub("%s+", " "))
+                break
+            end
+        end
+    end
+    if lower == "" then return nil end
+
     for _, mutasiName in ipairs(MutasiList) do
         local mutasiLower = string.lower(mutasiName)
         local s = string.find(lower, mutasiLower, 1, true)
         if s then
-            local before = s == 1 and " " or lower:sub(s - 1, s - 1)
-            local after  = lower:sub(s + #mutasiLower, s + #mutasiLower)
-            if (before == " " and after == " ")
-            or (s == 1 and after == " ") then
+            local beforeOk = (s == 1) or (lower:sub(s - 1, s - 1) == " ")
+            local afterPos = s + #mutasiLower
+            local afterOk  = (afterPos > #lower) or (lower:sub(afterPos, afterPos) == " ")
+            if beforeOk and afterOk then
                 return mutasiName
             end
         end
@@ -1306,16 +1545,20 @@ local function CheckAndSend(rawMsg)
         NameStats[lname] = { name = canonicalName, secretList = {}, secretCount = 0, forgottenCount = 0, totalPoin = 0, catches = {} }
     end
 
+    -- Lokasi player saat catch (leaderstats -> workspace -> estimasi spawn terdekat)
+    local playerLocation = GetPlayerLocation(targetPlayer)
+
     -- 1. Crystalized Legendary
     local legendaryBase = FindLegendaryCrystal(data.fish)
     if legendaryBase then
-        local imageUrl = FishImageURL[legendaryBase]
+        local imageUrl = GetFishImageURL(legendaryBase)
             or (FishImageCache[legendaryBase] and (PROXY .. "/asset/" .. FishImageCache[legendaryBase]))
         SendFishWebhook("☄️ CRYSTALIZED LEGENDARY!", nil, 3407871, {
             BuildFieldContent("👤", "Player",  "**" .. canonicalName .. "**",  true),
             BuildFieldContent("🦐", "Item",    "**" .. data.fish .. "**",      true),
             BuildFieldContent("✨", "Type",    "Crystalized Legendary",         true),
             BuildFieldContent("⚖️", "Weight",  data.weight,                    true),
+            BuildFieldContent("📍", "Lokasi",  playerLocation,                  true),
         }, imageUrl, avatarUrl, GetMention(canonicalName), "secret")
         return
     end
@@ -1323,12 +1566,13 @@ local function CheckAndSend(rawMsg)
     -- 2. Ruby Gemstone
     local rubyBase = FindRuby(data.fish)
     if rubyBase then
-        local imageUrl = FishImageURL[rubyBase]
+        local imageUrl = GetFishImageURL(rubyBase)
             or (FishImageCache[rubyBase] and (PROXY .. "/asset/" .. FishImageCache[rubyBase]))
         SendFishWebhook("💎 RUBY GEMSTONE!", nil, 16753920, {
             BuildFieldContent("👤", "Player", "**" .. canonicalName .. "**", true),
             BuildFieldContent("💎", "Item",   "**" .. data.fish .. "**",     true),
             BuildFieldContent("⚖️", "Weight", data.weight,                   true),
+            BuildFieldContent("📍", "Lokasi", playerLocation,                 true),
         }, imageUrl, avatarUrl, GetMention(canonicalName), "secret")
         return
     end
@@ -1336,7 +1580,7 @@ local function CheckAndSend(rawMsg)
     -- 3. Secret / Forgotten Fish
     local baseName, mutasi = FindSecretFish(data.fish)
     if baseName then
-        local imageUrl = FishImageURL[baseName]
+        local imageUrl = GetFishImageURL(baseName)
             or (FishImageCache[baseName] and (PROXY .. "/asset/" .. FishImageCache[baseName]))
 
         local isForgotten = false
@@ -1396,6 +1640,7 @@ local function CheckAndSend(rawMsg)
             BuildFieldContent("🌀", "Variant", mutasiField,                    true),
             BuildFieldContent("⚖️", "Weight",  data.weight,                   true),
             BuildFieldContent("🎲", "Chance",  chanceInfo,                     true),
+            BuildFieldContent("📍", "Lokasi",  playerLocation,                 true),
         }
 
         -- Tambahkan field galatama jika ada poin
@@ -1455,7 +1700,7 @@ local function WatchBackpack(bp)
     bp.ChildAdded:Connect(function(item)
         task.wait(0.1)
         local baseName = FindSecretFish(item.Name)
-        if baseName and not FishImageURL[baseName] and not FishImageCache[baseName] then
+        if baseName and not GetFishImageURL(baseName) and not FishImageCache[baseName] then
             local imgId = GetFishImageId(item)
             if imgId then FishImageCache[baseName] = imgId end
         end
@@ -1618,6 +1863,7 @@ end
 
 local function StartMonitoring()
     ServerStats.startTime = os.time()
+    CacheSpawnLocations() -- scan folder "!!! SPAWN LOCATIONS" sekali di awal monitoring
 
     warn("[ Monitor ] Starting with:")
     warn("  - JOIN/LEAVE:  " .. (WEBHOOK_URL         ~= "" and "✓ SET" or "✗ EMPTY"))
